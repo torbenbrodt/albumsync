@@ -16,8 +16,8 @@ class Media:
 
     @staticmethod
     def create(self, album, media_src):
-        path = album.getLocalURL() + '/' + urllib.quote(media_src.getTitle(), '')
-        self.download(media_src.getURL(), album.getLocalURL() + '/' + urllib.quote(media_src.getTitle(), ''))
+        path = album.getLocalURL() + '/' + urllib.quote(media_src.get_title(), '')
+        self.download(media_src.get_url(), album.getLocalURL() + '/' + urllib.quote(media_src.get_title(), ''))
         return Media(album, path)
 
     def __init__(self, album, path):

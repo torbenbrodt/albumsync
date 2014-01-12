@@ -24,20 +24,20 @@ class Sync:
         @param album_src:
         @param album_target:
         """
-        targets = album_target.fetchAll()
-        for album_src in album_src.fetchAll():
-             if album_src.getMatchName() in targets:
-                 target = targets[album_src.getMatchName()]
+        targets = album_target.fetch_all()
+        for album_src in album_src.fetch_all():
+             if album_src.get_match_name() in targets:
+                 target = targets[album_src.get_match_name()]
              else 
                  target = album_target.create(album1)
 
              self.syncMedia(album_src, target)
 
      def syncMedia(self, album_src, album_target):
-        targets = album_target.Media.fetchAll(album_target)
-        for media_src in album_src.Media.fetchAll(album_src):
-             if media_src.getMatchName() in targets:
-                 media_target = targets[media_src.getMatchName()]
+        targets = album_target.Media.fetch_all(album_target)
+        for media_src in album_src.Media.fetch_all(album_src):
+             if media_src.get_match_name() in targets:
+                 media_target = targets[media_src.get_match_name()]
              else:
                  if album_target.getRestrictions():
                      if media_src.getSize() > album_src.getConfig().getMaxWidth():
