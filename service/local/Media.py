@@ -1,12 +1,24 @@
+import hashlib
+import mimetypes
+import os
+import urllib
+
+
 class Media:
     "Model: common public api for all medias like photos and videos"
 
-    # @static access
+    @staticmethod
     def fetchAll(self, album):
         entries = {}
         for path in os.scandir(album.getLocalPath()):
             entries[photoTitle] = Media(webAlbum, path)
         return entries
+
+    @staticmethod
+    def create(self, album, media_src):
+        path = album.getLocalURL() + '/' + urllib.quote(media_src.getTitle(), '')
+        self.download(media_src.getURL(), album.getLocalURL() + '/' + urllib.quote(media_src.getTitle(), ''))
+        return Media(album, path)
 
     def __init__(self, album, path):
         self.album = album
@@ -33,11 +45,11 @@ class Media:
 
     def getTitle(self):
         "title"
-        return webReference.title.text
+        return self.path
 
     def getDescription(self):
         "description"
-        return webReference.description.text
+        return self.path
 
     def getURL(self):
         return self.path
@@ -51,8 +63,6 @@ class Media:
     def download(self, path):
         os.copy(self.path, path)
 
-    # @static access
-    def create(self, album, media_src):
-        path = album.getLocalURL() + '/' + urllib.quote(media_src.getTitle(), '')
-        self.download(media_src.getURL(), album.getLocalURL() + '/' + urllib.quote(media_src.getTitle(), ''))
-        return Media(album, path)
+    def getMatchName(self):
+        "this method is used to match albums"
+        return self.getTitle()
