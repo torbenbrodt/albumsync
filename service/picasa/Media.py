@@ -1,8 +1,8 @@
 import mimetypes
 import urllib
-import time
 import re
 from service.picasa.Client import Client
+from gdata.photos.service import *
 
 
 class Media:
@@ -23,8 +23,8 @@ class Media:
         """
 
         # bit of a hack, but can't see anything in api to do it.
-        photos = repeat(lambda: Client.get_client().GetFeed(album.get_url() + "&imgmax=d"),
-                        "list photos in album %s" % foundAlbum.albumName, True)
+        photos = Client.repeat(lambda: Client.get_client().GetFeed(album.get_url() + "&imgmax=d"),
+                        "list photos in album %s" % album.get_title(), True)
 
         entries = {}
         for webPhoto in photos.entry:
@@ -109,12 +109,11 @@ class Media:
         if mimeType in self.supportedImageFormats:
             media = Client.get_client().InsertPhoto(album.webAlbum.albumUri, metadata, media_src.get_local_urlk(),
                                           media_src.get_mim_type())
-        else if mimeType in self.supportedVideoFormats:
+        elif mimeType in self.supportedVideoFormats:
             if media_src.get_size() > self.MAX_VIDEO_SIZE:
-                throw
-                Exception("Not uploading %s because it exceeds maximum file size" % media_src.getID())
+                raise Exception("Not uploading %s because it exceeds maximum file size" % media_src.getID())
                 return
-        media = Client.get_client().InsertVideo(subAlbum.albumUri, metadata, self.path, mimeType)
-        else: Exception('unsupported file extension')
+            media = Client.get_client().InsertVideo(subAlbum.albumUri, metadata, self.path, mimeType)
+        else: raise Exception('unsupported file extension')
         return Media(album, media)
 
