@@ -1,40 +1,56 @@
+from service.picasa.Client import Client
+
+
 class Album:
-    "Model: common public api for all albums"
 
     @staticmethod
-    def fetchAll(self):
-        "walk the web album finding albums there"
+    def fetch_all():
+        """walk the web album finding albums there
+        @rtype : list of Album
+        """
 
-        #todo How to list and download albums which are shared with me?
-        # (api / Community search?)
+        #todo How to list and download albums which are shared with me? Community search?
         entries = []
-        webAlbums = gd_client.GetUserFeed()
-        for webAlbum in webAlbums.entry:
+        for webAlbum in Client.get_client().GetUserFeed():
             entries.append(Album(webAlbum))
         return entries
 
     @staticmethod
-    def create(self, album_src):
-        gd_client.InsertAlbum(title=album_src.getTitle(), access='private', summary='synced from ...')
+    def create(album_src):
+        """
+        @type album_src: Album
+        @param album_src: source album
+        @rtype Album
+        """
+        Client.get_client().InsertAlbum(title=album_src.get_title(), access='private', summary='synced from ...')
 
     def __init__(self, webAlbum):
         self.webAlbum = webAlbum
 
-    def getURL(self):
+    def get_url(self):
+        """
+        @rtype : string
+        """
         return self.webAlbum.GetPhotosUri()
 
-    def getTitle(self):
+    def get_title(self):
+        """
+        @rtype : string
+        """
         return self.webAlbum.title.text
 
-    def getMatchName(self):
-        "this method is used to match albums"
-        return self.getTitle()
+    def get_match_name(self):
+        """
+        this method is used to match albums
+        @rtype : string
+        """
+        return self.get_title()
 
-    def getNumbersOfMedias(self):
+    def get_number_of_media(self):
+        """
+        @rtype : int
+        """
         return self.webAlbum.numberFiles.text
 
-    def getID(self):
-        return self.webAlbum.id.text
-
     def _getEditObject(self):
-        return gd_client.GetEntry(self.getID())
+        return Client.get_client().GetEntry(self.getID())

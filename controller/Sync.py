@@ -40,9 +40,9 @@ class Sync:
                  media_target = targets[media_src.get_match_name()]
              else:
                  if album_target.getRestrictions():
-                     if media_src.getSize() > album_src.getConfig().getMaxWidth():
+                     if media_src.get_size() > album_src.getConfig().getMaxWidth():
                          util.Image.resize(media_src)
-                     if media_src.getSize() > album_target.getConfig().getMaxWidth():
+                     if media_src.get_size() > album_target.getConfig().getMaxWidth():
                          util.Image.resize(media_src)
 
                  media_target = album_target.Media.create(album_target, media_src)

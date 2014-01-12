@@ -1,10 +1,12 @@
+import mimetypes
 import urllib
 import time
 import re
+from service.picasa.Client import Client
 
 
 class Media:
-    "Model: common public api for all medias like photos and videos"
+    """Model: common public api for all medias like photos and videos"""
 
     MAX_VIDEO_SIZE = 1073741824
     MAX_FREE_IMAGE_DIMENSION = 2048
@@ -14,14 +16,14 @@ class Media:
          "video/x-ms-asf", "video/x-ms-wmv", "video/x-msvideo"])
 
     @staticmethod
-    def fetchAll(album):
+    def fetch_all(album):
         """
         @param Album album:
         @return: Media[]
         """
 
         # bit of a hack, but can't see anything in api to do it.
-        photos = repeat(lambda: gd_client.GetFeed(album.getURL() + "&imgmax=d"),
+        photos = repeat(lambda: Client.get_client().GetFeed(album.get_url() + "&imgmax=d"),
                         "list photos in album %s" % foundAlbum.albumName, True)
 
         entries = {}
@@ -35,33 +37,29 @@ class Media:
 
     def save(self):
         # todo what is needed?
-        entry = gd_client.GetEntry(self._getEditObject().GetEditLink().href)
-        self.webreference = gd_client.UpdatePhotoMetadata(entry)
+        entry = Client.get_client().GetEntry(self._getEditObject().GetEditLink().href)
+        self.webreference = Client.get_client().UpdatePhotoMetadata(entry)
 
     def _getEditObject(self):
         if self.gphoto_id:
-            photo = gd_client.GetFeed('/data/feed/api/user/%s/albumid/%s/photoid/%s' % (
+            photo = Client.get_client().GetFeed('/data/feed/api/user/%s/albumid/%s/photoid/%s' % (
                 "default", self.webPhoto.albumid, self.webPhoto.gphoto_id))
             return photo
             # FIXME throw exception
         return None
 
-    def getSize(self):
+    def get_size(self):
         return int(self.webPhoto.size.text)
 
-    def getDate(self):
+    def get_date(self):
         return time.mktime(
             time.strptime(re.sub("\.[0-9]{3}Z$", ".000 UTC", self.webPhoto.updated.text), '%Y-%m-%dT%H:%M:%S.000 %Z'))
 
-    def getHash(self):
+    def get_checksum(self):
         return self.webPhoto.checksum.text
 
-    def getID(self):
-        "unique identifier"
-        return self.webPhoto.gphoto_id.text
-
-    def getTitle(self):
-        "title"
+    def get_title(self):
+        """title"""
 
         # cleanup title
         if self.webPhoto.title.text == None:
@@ -69,32 +67,32 @@ class Media:
         else:
             return urllib.unquote(self.webPhoto.title.text)
 
-    def getDescription(self):
-        "description"
+    def get_description(self):
+        """description"""
         return self.webPhoto.description.text
 
-    def getURL(self):
+    def get_url(self):
         return self.webPhoto.content.src
 
     def delete(self):
-        gd_client.Delete(self._getEditObject())
+        Client.get_client().Delete(self._getEditObject())
 
-    def getLocalUrl(self):
+    def get_local_urlk(self):
         tmp_path = '/tmp/xxx'
         self.download(tmp_path)
         return tmp_path
 
-    def getMimeType(self):
-        path = self.getLocalUrl()
+    def get_mim_type(self):
+        path = self.get_local_urlk()
         return mimetypes.guess_type(path)[0]
 
     def download(self, path):
-        url = self.getURL()
+        url = self.get_url()
         urllib.urlretrieve(url, path)
 
-    def getMatchName(self):
-        "this method is used to match albums"
-        return self.getTitle()
+    def get_match_name(self):
+        """this method is used to match albums"""
+        return self.get_title()
 
     @staticmethod
     def create(self, album, media_src):
@@ -103,21 +101,20 @@ class Media:
         @param media_src:
         @return: Media
         """
-        mimeType = media_src.getMimeType()
+        mimeType = media_src.get_mim_type()
         metadata = gdata.photos.PhotoEntry()
-        metadata.title = atom.Title(text=urllib.quote(media_src.getTitle(), ''))
-        metadata.summary = atom.Summary(text=media_src.getDescription(), summary_type='text')
-        metadata.checksum = gdata.photos.Checksum(text=media_src.getHash())
+        metadata.title = atom.Title(text=urllib.quote(media_src.get_title(), ''))
+        metadata.summary = atom.Summary(text=media_src.get_description(), summary_type='text')
+        metadata.checksum = gdata.photos.Checksum(text=media_src.get_checksum())
         if mimeType in self.supportedImageFormats:
-            media = gd_client.InsertPhoto(album.webAlbum.albumUri, metadata, media_src.getLocalUrl(),
-                                          media_src.getMimeType())
-        else
-        if mimeType in self.supportedVideoFormats:
-            if media_src.getSize() > self.MAX_VIDEO_SIZE:
+            media = Client.get_client().InsertPhoto(album.webAlbum.albumUri, metadata, media_src.get_local_urlk(),
+                                          media_src.get_mim_type())
+        else if mimeType in self.supportedVideoFormats:
+            if media_src.get_size() > self.MAX_VIDEO_SIZE:
                 throw
                 Exception("Not uploading %s because it exceeds maximum file size" % media_src.getID())
                 return
-        media = gd_client.InsertVideo(subAlbum.albumUri, metadata, self.path, mimeType)
-        else Exception('unsupported file extension')
+        media = Client.get_client().InsertVideo(subAlbum.albumUri, metadata, self.path, mimeType)
+        else: Exception('unsupported file extension')
         return Media(album, media)
 
