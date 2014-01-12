@@ -1,4 +1,5 @@
 from service.picasa.Client import Client
+from gdata.photos.service import *
 
 
 class Album:
@@ -9,10 +10,11 @@ class Album:
         @rtype : list of Album
         """
 
-        #todo How to list and download albums which are shared with me? Community search?
+        # todo How to list and download albums which are shared with me? Community search?
+        # photos = gd_client.SearchCommunityPhotos('puppy', limit='10')
         entries = []
-        for webAlbum in Client.get_client().GetUserFeed().entry:
-            entries.append(Album(webAlbum))
+        for web_album in Client.get_client().GetUserFeed().entry:
+            entries.append(Album(web_album))
         return entries
 
     @staticmethod
@@ -22,7 +24,14 @@ class Album:
         @param album_src: source album
         @rtype Album
         """
-        Client.get_client().InsertAlbum(title=album_src.get_title(), access='private', summary='synced from ...')
+        web_album = Client.get_client().InsertAlbum(title=album_src.get_title(), access='private', summary='synced from ...')
+        return Album(web_album)
+
+    def save(self):
+        Client.get_client().Put(self.web_album, self.web_album.GetEditLink().href, converter = gdata.photos.AlbumEntryFromString)
+
+    def delete(self):
+        Client.get_client().Delete(self.web_album)
 
     def __init__(self, web_album):
         """
@@ -56,6 +65,3 @@ class Album:
         @rtype : int
         """
         return self.web_album.numphotos.text
-
-    def _getEditObject(self):
-        return Client.get_client().GetEntry(self.web_album.gphoto_id)

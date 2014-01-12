@@ -16,8 +16,10 @@ class MediaTest(unittest.TestCase):
         Config.password = parser.get('credentials', 'password')
 
     def test_fetchAll(self):
-        album = Album.fetch_all()[0]
+        self._addSkip("needs google account for unit testing only")
+        album = Album.fetch_all()[1]
+        print album.get_title()
         for media in Media.fetch_all(album):
-            print media
+            print media.get_title()
 
 
