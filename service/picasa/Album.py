@@ -4,6 +4,9 @@ class Album:
     @staticmethod
     def fetchAll(self):
         "walk the web album finding albums there"
+
+        #todo How to list and download albums which are shared with me?
+        # (api / Community search?)
         entries = []
         webAlbums = gd_client.GetUserFeed()
         for webAlbum in webAlbums.entry:

@@ -47,4 +47,7 @@ class Sync:
 
                  media_target = album_target.Media.create(album_target, media_src)
 
+            #todo Do local backups if files are overriden
+            #todo Update meta data (including version?)
+            #todo think about etag usage, https://developers.google.com/picasa-web/docs/2.0/developers_guide_protocol
             media_target.compare()
