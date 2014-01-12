@@ -62,7 +62,11 @@ class Media:
         Client.get_client().UpdatePhotoMetadata(entry)
 
     def _getEditObject(self):
-        if self.gphoto_id:
+        #It is important that you don't keep the old object around, once
+        #it has been updated. See
+        #http://code.google.com/apis/gdata/reference.html#Optimistic-concurrency
+
+        if self.web_ref.gphoto_id:
             photo = Client.get_client().GetFeed('/data/feed/api/user/%s/albumid/%s/photoid/%s' % (
                 "default", self.web_ref.albumid, self.web_ref.gphoto_id))
             return photo
