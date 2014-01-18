@@ -14,7 +14,11 @@ class Album:
         entries = []
         for root, dirs, files in os.walk(Config.dir):
             for path in dirs:
-                entries.append(Album(path))
+                album_path = os.path.join(root, path)
+                album_root, album_dirs, album_files = os.walk(album_path).next()
+                # only find directories which include files
+                if len(album_files):
+                    entries.append(Album(album_path))
         return entries
 
     @staticmethod
@@ -45,7 +49,7 @@ class Album:
         """
         @rtype : string
         """
-        return os.path.basename(self.path)
+        return self.path[len(Config.dir) + 1:]
 
     def get_number_of_media(self):
         """
