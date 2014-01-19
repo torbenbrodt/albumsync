@@ -60,3 +60,10 @@ class Media:
     def get_match_name(self):
         """this method is used to match media"""
         return self.get_title()
+
+    def is_resize_necessary(self):
+        return False
+
+    def resize(self):
+        #todo use util.Image.resize
+        pass

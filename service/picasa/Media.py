@@ -131,11 +131,12 @@ class Media:
         return self.get_title()
 
     def is_resize_necessary(self):
-        #todo ask album for restrictions, width + height
-        #todo only resize if album is not public (picasa offers this for free)
+        #todo how to check album access against public
+        if self.album.web_ref.access == 'public':
+            return False
         width = int(self.web_ref.width.text)
         height = int(self.web_ref.height.text)
-        pass
+        return width > self.MAX_FREE_IMAGE_DIMENSION or height > self.MAX_FREE_IMAGE_DIMENSION
 
     def resize(self):
         #todo ask if service provides serverside resizing (so any meta data is not lost) otherwise use util.Image.resize

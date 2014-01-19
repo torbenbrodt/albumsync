@@ -32,10 +32,10 @@ class SyncMedia:
         if self.media_src.get_size() != self.media_target.get_size():
             pass
 
-        if self.media_src.get_time() != self.media_target.get_time():
+        if self.media_src.get_date() != self.media_target.get_date():
             pass
 
-        # then optional resize of media_src
+        # then run optional resize of media_src
         if self.media_src.is_resize_necessary():
             self.media_src.resize()
             pass

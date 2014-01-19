@@ -28,10 +28,10 @@ class Album:
         return Album(web_album)
 
     def save(self):
-        Client.get_client().Put(self.web_album, self.web_album.GetEditLink().href, converter = gdata.photos.AlbumEntryFromString)
+        Client.get_client().Put(self.web_ref, self.web_ref.GetEditLink().href, converter=gdata.photos.AlbumEntryFromString)
 
     def delete(self):
-        Client.get_client().Delete(self.web_album)
+        Client.get_client().Delete(self.web_ref)
 
     def __init__(self, web_album):
         """
@@ -39,19 +39,19 @@ class Album:
         @type web_album: AlbumEntry
         @param web_album: object from the gdata api
         """
-        self.web_album = web_album
+        self.web_ref = web_album
 
     def get_url(self):
         """
         @rtype : string
         """
-        return self.web_album.GetPhotosUri()
+        return self.web_ref.GetPhotosUri()
 
     def get_title(self):
         """
         @rtype : string
         """
-        return self.web_album.title.text
+        return self.web_ref.title.text
 
     def get_match_name(self):
         """
@@ -64,4 +64,4 @@ class Album:
         """
         @rtype : int
         """
-        return self.web_album.numphotos.text
+        return self.web_ref.numphotos.text

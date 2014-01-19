@@ -15,11 +15,17 @@ class MediaTest(unittest.TestCase):
         Config.username = parser.get('credentials', 'username')
         Config.password = parser.get('credentials', 'password')
 
-    def test_fetchAll(self):
+    def test_fetch_all(self):
         self._addSkip("needs google account for unit testing only")
         album = Album.fetch_all()[1]
         print album.get_title()
         for media in Media.fetch_all(album):
             print media.get_title()
+
+    def test_get_hash(self):
+        self._addSkip("needs google account for unit testing only")
+        # todo test1 with empty hash
+        # todo test2 with hash written back
+
 
 
