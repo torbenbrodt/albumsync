@@ -1,6 +1,5 @@
 import logging
 from controller.SyncMedia import SyncMedia
-from util.Callback import Callback
 
 
 class SyncAlbum:
@@ -21,7 +20,6 @@ class SyncAlbum:
             else:
                 logging.getLogger().info(media_src.get_match_name() + ', media match: no')
                 media_target = self.service_target.Media.Media.create(self.album_target, media_src)
-                media_src.callback(Callback.CREATE, media_target)
 
             media = SyncMedia(media_src, media_target)
             media.run()

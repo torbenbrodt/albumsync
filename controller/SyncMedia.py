@@ -15,6 +15,14 @@ class SyncMedia:
         self.media_target = media_target
 
     def run(self):
+
+        # before comparing ensure, that objects are valid
+        if not self.media_src.get_hash():
+            self.media_src.save()
+
+        if not self.media_target.get_hash():
+            self.media_target.save()
+
         # check if files are equal
         logging.getLogger().info('checksum ' + self.media_src.get_hash() + ' vs ' + self.media_target.get_hash())
 

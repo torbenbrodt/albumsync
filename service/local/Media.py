@@ -60,6 +60,3 @@ class Media:
     def get_match_name(self):
         """this method is used to match media"""
         return self.get_title()
-
-    def callback(self, action, media_other):
-        pass
