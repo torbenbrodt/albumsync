@@ -1,6 +1,5 @@
 import gdata
 import gdata.photos, gdata.photos.service
-import time
 from service.picasa.Config import Config
 
 

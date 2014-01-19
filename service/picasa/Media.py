@@ -1,9 +1,10 @@
 import mimetypes
+import tempfile
 import urllib
 import re
 from service.picasa.Client import Client
 from gdata.photos.service import *
-from util.Checksum import Checksum
+from util.Callback import Callback
 
 
 class Media:
@@ -42,7 +43,7 @@ class Media:
         metadata = gdata.photos.PhotoEntry()
         metadata.title = atom.Title(text=urllib.quote(media_src.get_title(), ''))
         metadata.summary = atom.Summary(text=media_src.get_description(), summary_type='text')
-        metadata.checksum = gdata.photos.Checksum(text=media_src.get_checksum())
+        metadata.checksum = gdata.photos.Checksum(text=media_src.get_hash())
         if mimeType in Media.supportedImageFormats:
             media = Client.get_client().InsertPhoto(album.webAlbum.albumUri, metadata, media_src.get_local_url(), mimeType)
         elif mimeType in Media.supportedVideoFormats:
@@ -58,11 +59,14 @@ class Media:
         self.web_ref = web_ref
 
     def save(self):
-        # todo what is needed?
-        entry = Client.get_client().GetEntry(self._getEditObject().GetEditLink().href)
-        Client.get_client().UpdatePhotoMetadata(entry)
+        # todo more available attributes are checksum, updated, version, rights, summary
+        #metadata.summary = atom.Summary(text=os.path.relpath(self.path,self.album.rootPath), summary_type='text')
+        #metadata.checksum = gdata.photos.Checksum(text=self.getLocalHash())
+        #entry = Client.get_client().GetEntry(self._get_edit_object().GetEditLink().href)
+        #Client.get_client().UpdatePhotoMetadata(entry)
+        pass
 
-    def _getEditObject(self):
+    def _get_edit_object(self):
         #It is important that you don't keep the old object around, once
         #it has been updated. See
         #http://code.google.com/apis/gdata/reference.html#Optimistic-concurrency
@@ -75,25 +79,24 @@ class Media:
         return None
 
     def get_hash(self):
-        # todo first query exif data
-        return Checksum.get_md5(self.get_url())
+        if self.hash:
+            return self.hash
+        return str(self.web_ref.checksum.text)
 
     def get_size(self):
+        """in bytes"""
         return int(self.web_ref.size.text)
 
     def get_date(self):
         return time.mktime(
             time.strptime(re.sub("\.[0-9]{3}Z$", ".000 UTC", self.web_ref.updated.text), '%Y-%m-%dT%H:%M:%S.000 %Z'))
 
-    def get_checksum(self):
-        return self.web_ref.checksum.text
-
     def get_title(self):
         """title"""
 
         # cleanup title
-        if self.web_ref.title.text == None:
-            return ""
+        if self.web_ref.title.text is None:
+            return ''
         else:
             return urllib.unquote(self.web_ref.title.text)
 
@@ -105,13 +108,14 @@ class Media:
         return self.web_ref.content.src
 
     def delete(self):
-        Client.get_client().Delete(self._getEditObject())
+        Client.get_client().Delete(self._get_edit_object())
 
     def get_local_url(self):
+        """this uses download"""
         #todo deprecated?
-        tmp_path = '/tmp/xxx'
-        self.download(tmp_path)
-        return tmp_path
+        path = os.path.join(tempfile.gettempdir(), self.get_title())
+        self.download(path)
+        return path
 
     def get_mime_type(self):
         path = self.get_local_url()
@@ -128,8 +132,20 @@ class Media:
     def is_resize_necessary(self):
         #todo ask album for restrictions, width + height
         #todo only resize if album is not public (picasa offers this for free)
+        width = int(self.web_ref.width.text)
+        height = int(self.web_ref.height.text)
         pass
 
     def resize(self):
         #todo ask if service provides serverside resizing (so any meta data is not lost) otherwise use util.Image.resize
         pass
+
+    def set_hash(self, hash):
+        self.hash = hash
+
+    def callback(self, action, media_other):
+        """callback will update the hash"""
+        # update the hash
+        if action in [Callback.CREATE, Callback.UPDATE]:
+            self.set_hash(media_other.get_hash())
+            self.save()
