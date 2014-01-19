@@ -1,8 +1,12 @@
 import tempfile
 
+
 class Image:
 
-    def copyExif(self, fromPath, toPath):
+    def __init__(self):
+        pass
+
+    def copy_exif(self, fromPath, toPath):
         pass
 
     # used https://github.com/jackpal/picasawebuploader/blob/master/main.py and 

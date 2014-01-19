@@ -3,6 +3,7 @@ import urllib
 import re
 from service.picasa.Client import Client
 from gdata.photos.service import *
+from util.Checksum import Checksum
 
 
 class Media:
@@ -73,6 +74,10 @@ class Media:
             # FIXME throw exception
         return None
 
+    def get_hash(self):
+        # todo first query exif data
+        return Checksum.get_md5(self.get_url())
+
     def get_size(self):
         return int(self.web_ref.size.text)
 
@@ -113,8 +118,18 @@ class Media:
         return mimetypes.guess_type(path)[0]
 
     def download(self, path):
+        # todo check if create/edit times can be transferred (if this check is needed in SyncMedia)
         urllib.urlretrieve(self.get_url(), path)
 
     def get_match_name(self):
         """this method is used to match media"""
         return self.get_title()
+
+    def is_resize_necessary(self):
+        #todo ask album for restrictions, width + height
+        #todo only resize if album is not public (picasa offers this for free)
+        pass
+
+    def resize(self):
+        #todo ask if service provides serverside resizing (so any meta data is not lost) otherwise use util.Image.resize
+        pass

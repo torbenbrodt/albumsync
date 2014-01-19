@@ -1,7 +1,7 @@
-import hashlib
 import mimetypes
 import os
 import shutil
+from util.Checksum import Checksum
 
 
 class Media:
@@ -34,11 +34,7 @@ class Media:
         return self.path
 
     def get_hash(self):
-        md5 = hashlib.md5()
-        with open(self.get_url(), 'rb') as f:
-            for chunk in iter(lambda: f.read(128*md5.block_size), b''): 
-                md5.update(chunk)
-        return md5.hexdigest()
+        return Checksum.get_md5(self.get_url())
 
     def get_date(self):
         return os.path.getmtime(self.get_url())
