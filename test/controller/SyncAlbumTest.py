@@ -2,12 +2,12 @@ import os
 import tempfile
 import unittest
 import ConfigParser
-from controller.Sync import Sync
+from controller.SyncAlbum import SyncAlbum
 import service.local.Config
 import service.picasa.Config
 
 
-class SyncTest(unittest.TestCase):
+class SyncAlbumTest(unittest.TestCase):
 
     def setUp(self):
         # local config
@@ -26,7 +26,7 @@ class SyncTest(unittest.TestCase):
         pass
 
     def test_run_from_picasa_to_local(self):
-        sync = Sync(service.picasa, service.local)
+        sync = SyncAlbum(service.picasa, service.local, self.album_src, self.album_target)
         sync.run()
 
 

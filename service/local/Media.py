@@ -1,68 +1,66 @@
 import hashlib
 import mimetypes
 import os
-import urllib
+import shutil
 
 
 class Media:
-    "Model: common public api for all medias like photos and videos"
+    """Model: common public api for all medias like photos and videos"""
 
     @staticmethod
-    def fetchAll(self, album):
-        entries = {}
-        for path in os.scandir(album.getLocalPath()):
-            entries[photoTitle] = Media(webAlbum, path)
+    def fetch_all(album):
+        """walk the directories
+        @rtype : list of Album
+        """
+        entries = []
+        for root, dirs, files in os.walk(album.get_url()):
+            for path in files:
+                #todo needs depth check
+                media_path = os.path.join(root, path)
+                entries.append(Media(album, media_path))
         return entries
 
     @staticmethod
-    def create(self, album, media_src):
-        path = album.getLocalURL() + '/' + urllib.quote(media_src.get_title(), '')
-        self.download(media_src.get_url(), album.getLocalURL() + '/' + urllib.quote(media_src.get_title(), ''))
+    def create(album, media_src):
+        path = os.path.join(album.get_url(), media_src.get_title())
+        media_src.download(path)
         return Media(album, path)
 
     def __init__(self, album, path):
         self.album = album
         self.path = path
     
-    def getLocalUrl(self):
+    def get_url(self):
         return self.path
 
-    def getHash(self):
+    def get_hash(self):
         md5 = hashlib.md5()
-        with open(self.getLocalUrl(),'rb') as f: 
+        with open(self.get_url(), 'rb') as f:
             for chunk in iter(lambda: f.read(128*md5.block_size), b''): 
-                 md5.update(chunk)
+                md5.update(chunk)
         return md5.hexdigest()
 
-    def getDate(self):
-        return os.path.getmtime(self.getLocalUrl())
+    def get_date(self):
+        return os.path.getmtime(self.get_url())
 
-    def getSize(self):
-        return os.path.getsize(self.getLocalUrl())
+    def get_size(self):
+        return os.path.getsize(self.get_url())
 
     def delete(self):
-        os.remove(self.getLocalUrl())
+        os.remove(self.get_url())
 
-    def getTitle(self):
-        "title"
+    def get_title(self):
         return self.path
 
-    def getDescription(self):
-        "description"
+    def get_description(self):
         return self.path
 
-    def getURL(self):
-        return self.path
-
-    def getLocalUrl(self):
-        return self.path
-
-    def getMimeType(self):
+    def get_mime_type(self):
         return mimetypes.guess_type(self.path)[0]
 
     def download(self, path):
-        os.copy(self.path, path)
+        shutil.copyfile(self.path, path)
 
-    def getMatchName(self):
-        "this method is used to match albums"
-        return self.getTitle()
+    def get_match_name(self):
+        """this method is used to match media"""
+        return self.get_title()

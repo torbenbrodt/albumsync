@@ -1,5 +1,9 @@
+import logging
+from controller.SyncMedia import SyncMedia
+
+
 class SyncAlbum:
-    """ ... """
+    """Controller 2: uses albums to compare medias."""
 
     def __init__(self, service_src, service_target, album_src, album_target):
         self.service_src = service_src
@@ -8,17 +12,14 @@ class SyncAlbum:
         self.album_target = album_target
 
     def run(self):
-        medias_target = self.service_target.Media.Media.fetch_all(self.album_target)
-        media_target_match_names = lambda x: x.get_matching_name, medias_target
+        medias_targets_dict = dict((media_target.get_match_name(), media_target) for media_target in self.service_target.Media.Media.fetch_all(self.album_target))
         for media_src in self.service_src.Media.Media.fetch_all(self.album_src):
-            print "matching media ", media_src.get_match_name()
-            if media_src.get_match_name() in media_target_match_names:
-                print "match media found"
-                self.sync()
+            if medias_targets_dict.has_key(media_src.get_match_name()):
+                logging.getLogger().info(media_src.get_match_name() + ', media match: yes')
+                media_target = medias_targets_dict[media_src.get_match_name()]
             else:
-                print "no match media found"
-                self.sync()
+                logging.getLogger().info(media_src.get_match_name() + ', media match: no')
+                media_target = self.service_target.Media.Media.create(self.album_target, media_src)
 
-    def sync(self):
-        #todo call SyncMedia.run
-        pass
+            media = SyncMedia(media_src, media_target)
+            media.run()

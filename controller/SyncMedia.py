@@ -4,10 +4,9 @@ import util.Image
 class SyncMedia:
     """ ... """
 
-    def __init__(self, media_src, media_target, album_target):
+    def __init__(self, media_src, media_target):
         self.media_src = media_src
         self.media_target = media_target
-        self.album_target = album_target
 
     def run(self):
         #todo ask album for restrictions, width + height

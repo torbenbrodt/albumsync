@@ -103,18 +103,18 @@ class Media:
         Client.get_client().Delete(self._getEditObject())
 
     def get_local_url(self):
+        #todo deprecated?
         tmp_path = '/tmp/xxx'
         self.download(tmp_path)
         return tmp_path
 
-    def get_mim_type(self):
+    def get_mime_type(self):
         path = self.get_local_url()
         return mimetypes.guess_type(path)[0]
 
     def download(self, path):
-        url = self.get_url()
-        urllib.urlretrieve(url, path)
+        urllib.urlretrieve(self.get_url(), path)
 
     def get_match_name(self):
-        """this method is used to match albums"""
+        """this method is used to match media"""
         return self.get_title()

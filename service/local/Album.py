@@ -8,7 +8,7 @@ class Album:
 
     @staticmethod
     def fetch_all():
-        """walk the directories in directory
+        """walk the directories
         @rtype : list of Album
         """
         entries = []
