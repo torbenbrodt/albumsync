@@ -1,9 +1,10 @@
 import os
 import urllib
 from service.local.Config import Config
+from service.abstract import AbstractAlbum
 
 
-class Album:
+class Album(AbstractAlbum):
     """Model: common public api for all albums"""
 
     @staticmethod

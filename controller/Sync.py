@@ -20,7 +20,7 @@ class Sync:
     def run(self):
         albums_targets_dict = dict((album_target.get_match_name(), album_target) for album_target in self.service_target.Album.Album.fetch_all())
         for album_src in self.service_src.Album.Album.fetch_all():
-            if albums_targets_dict.has_key(album_src.get_match_name()):
+            if album_src.get_match_name() in albums_targets_dict:
                 logging.getLogger().info(album_src.get_match_name() + ', album match: yes')
                 album_target = albums_targets_dict[album_src.get_match_name()]
             else:

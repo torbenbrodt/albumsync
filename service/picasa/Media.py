@@ -6,9 +6,10 @@ import shutil
 from service.picasa.Client import Client
 from gdata.photos.service import *
 from util.Checksum import Checksum
+from service.abstract import AbstractMedia
 
 
-class Media:
+class Media(AbstractMedia):
     """Model: common public api for all medias like photos and videos"""
 
     MAX_VIDEO_SIZE = 1073741824

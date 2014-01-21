@@ -1,8 +1,9 @@
 from service.picasa.Client import Client
 from gdata.photos.service import *
+from service.abstract import AbstractAlbum
 
 
-class Album:
+class Album(AbstractAlbum):
 
     @staticmethod
     def fetch_all():

@@ -2,9 +2,10 @@ import mimetypes
 import os
 import shutil
 from util.Checksum import Checksum
+from service.abstract import AbstractMedia
 
 
-class Media:
+class Media(AbstractMedia):
     """Model: common public api for all medias like photos and videos"""
 
     @staticmethod

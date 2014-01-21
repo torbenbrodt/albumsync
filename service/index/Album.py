@@ -2,7 +2,7 @@ from service.abstract import AbstractAlbum
 
 
 class Album(AbstractAlbum):
-    """Facebook Album"""
+    """Index Album"""
 
     def __init__(self, path):
         """
