@@ -62,6 +62,8 @@ class Media:
 
     def save(self):
         entry = Client.get_client().GetEntry(self._get_edit_object().GetEditLink().href)
+
+        # checksum is not trustable, see http://code.google.com/p/gdata-issues/issues/detail?id=2351
         hash = self.get_hash()
         if not hash:
             hash = Checksum.get_md5(self.get_local_url())
