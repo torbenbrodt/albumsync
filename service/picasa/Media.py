@@ -108,6 +108,7 @@ class Media:
         return self.web_ref.content.src
 
     def delete(self):
+        #todo is it possible to move to google picasa trash?
         Client.get_client().Delete(self._get_edit_object())
 
     def get_local_url(self):

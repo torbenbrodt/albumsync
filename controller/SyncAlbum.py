@@ -14,6 +14,11 @@ class SyncAlbum:
     def run(self):
         medias_targets_dict = dict((media_target.get_match_name(), media_target) for media_target in self.service_target.Media.Media.fetch_all(self.album_target))
         for media_src in self.service_src.Media.Media.fetch_all(self.album_src):
+
+            #todo load old index of album_src
+            #todo delete medias of album_src, which was deleted
+            #todo build new index of album_src
+
             if medias_targets_dict.has_key(media_src.get_match_name()):
                 logging.getLogger().info(media_src.get_match_name() + ', media match: yes')
                 media_target = medias_targets_dict[media_src.get_match_name()]

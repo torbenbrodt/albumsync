@@ -43,6 +43,7 @@ class Media:
         return os.path.getsize(self.get_url())
 
     def delete(self):
+        #todo is it possible to move to some trash directory
         os.remove(self.get_url())
 
     def get_title(self):
