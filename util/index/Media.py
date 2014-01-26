@@ -16,6 +16,8 @@ class Media:
         self.path = os.path.join(util.index.Config.Config.dir, self.service.__name__, self.album.get_match_name() + '.index')
 
     def update(self):
+        if not util.index.Config.Config.dir:
+            return
         # read media from service
         data_service = dict((media_target.get_match_name(), media_target) for media_target in self.service.Media.Media.fetch_all(self.album))
         # read existing index
@@ -38,6 +40,8 @@ class Media:
 
     def fetch_all(self):
         data = {}
+        if not util.index.Config.Config.dir:
+            return data
         try:
             # create dirs
             dirs = os.path.split(self.path)[0]
