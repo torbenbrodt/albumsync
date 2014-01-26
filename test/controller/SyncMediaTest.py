@@ -1,32 +1,35 @@
 import os
 import tempfile
 import unittest
-import ConfigParser
+import shutil
 from controller.SyncMedia import SyncMedia
+from service.local.Album import Album
+from service.local.Media import Media
 import service.local.Config
 import service.picasa.Config
+import util.Bootstrap
 
 
 class SyncMediaTest(unittest.TestCase):
-
     def setUp(self):
+        util.Bootstrap.Bootstrap()
         # local config
         service.local.Config.Config.dir = tempfile.mkdtemp()
-        # picasa config
-        parser = ConfigParser.ConfigParser()
-        parser.read(os.path.join(os.path.expanduser('~'), "albumsync.ini"))
-        service.picasa.Config.Config.username = parser.get('credentials', 'username')
-        service.picasa.Config.Config.password = parser.get('credentials', 'password')
-        # create some local folders, level 1
-        os.makedirs(service.local.Config.Config.dir + '/toplevel')
-        open(service.local.Config.Config.dir + '/toplevel/fileA.jpg', 'a').close()
-        os.makedirs(service.local.Config.Config.dir + '/2014/01 Big Data Beers')
-        open(service.local.Config.Config.dir + '/2014/01 Big Data Beers/fileB.jpg', 'a').close()
-        # create some remote albums
-        pass
 
-    def test_run_from_picasa_to_local(self):
-        sync = SyncMedia(service.picasa, service.local, self.album_src, self.album_target)
+    def test_files_same(self):
+        # create local albums
+        os.makedirs(service.local.Config.Config.dir + '/A')
+        album_src = Album(service.local.Config.Config.dir + '/A')
+        os.makedirs(service.local.Config.Config.dir + '/B')
+        album_target = Album(service.local.Config.Config.dir + '/B')
+        # get real images
+        path_src = service.local.Config.Config.dir + '/A/openartproject_city_limits.jpg'
+        path_target = service.local.Config.Config.dir + '/B/openartproject_city_limits.jpg'
+        path_test = os.path.dirname(os.path.abspath(__file__)) + '/../data/openartproject_city_limits.jpg'
+        shutil.copyfile(path_test, path_src)
+        shutil.copyfile(path_test, path_target)
+        media_src = Media(album_src, path_src)
+        media_target = Media(album_target, path_target)
+        # compare
+        sync = SyncMedia(media_src, media_target)
         sync.run()
-
-

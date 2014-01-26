@@ -27,18 +27,17 @@ class SyncMedia:
         logging.getLogger().info('checksum ' + self.media_src.get_hash() + ' vs ' + self.media_target.get_hash())
 
         if self.media_src.get_hash() != self.media_target.get_hash():
-            pass
+            logging.getLogger().debug('checksum is different, but that\'s ok picasa checksum is not trustable')
 
         if self.media_src.get_size() != self.media_target.get_size():
-            pass
+            logging.getLogger().debug('size in bytes is different')
 
         if self.media_src.get_date() != self.media_target.get_date():
-            pass
+            logging.getLogger().debug('date is different')
 
         # then run optional resize of media_src
         if self.media_src.is_resize_necessary():
             self.media_src.resize()
-            pass
 
         #todo Do local backups if files are overwritten
         #todo Update meta data (including version?)
