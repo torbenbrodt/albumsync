@@ -1,8 +1,8 @@
-from service.abstract import AbstractMedia
+from service.abstract.AbstractMedia import AbstractMedia
 
 
 class Media(AbstractMedia):
     """Facebook Media"""
 
     def __init__(self, album, path):
-        pass
+        AbstractMedia.__init__(self, album, path)

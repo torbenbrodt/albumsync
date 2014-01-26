@@ -2,7 +2,7 @@ import mimetypes
 import os
 import shutil
 from util.Checksum import Checksum
-from service.abstract import AbstractMedia
+from service.abstract.AbstractMedia import AbstractMedia
 
 
 class Media(AbstractMedia):
@@ -28,6 +28,11 @@ class Media(AbstractMedia):
         return Media(album, path)
 
     def __init__(self, album, path):
+        """
+        @param album:
+        @param path:
+        """
+        AbstractMedia.__init__(self, album, path)
         self.album = album
         self.path = path
     
@@ -48,7 +53,7 @@ class Media(AbstractMedia):
         os.remove(self.get_url())
 
     def get_title(self):
-        return self.path
+        return self.path[len(self.album.path) + 1:]
 
     def get_description(self):
         return self.path

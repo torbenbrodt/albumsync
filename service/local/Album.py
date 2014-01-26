@@ -1,7 +1,7 @@
 import os
 import urllib
 from service.local.Config import Config
-from service.abstract import AbstractAlbum
+from service.abstract.AbstractAlbum import AbstractAlbum
 
 
 class Album(AbstractAlbum):

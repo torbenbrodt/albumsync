@@ -1,6 +1,6 @@
 from service.picasa.Client import Client
 from gdata.photos.service import *
-from service.abstract import AbstractAlbum
+from service.abstract.AbstractAlbum import AbstractAlbum
 
 
 class Album(AbstractAlbum):

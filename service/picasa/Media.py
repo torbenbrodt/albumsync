@@ -6,7 +6,7 @@ import shutil
 from service.picasa.Client import Client
 from gdata.photos.service import *
 from util.Checksum import Checksum
-from service.abstract import AbstractMedia
+from service.abstract.AbstractMedia import AbstractMedia
 
 
 class Media(AbstractMedia):
@@ -56,7 +56,8 @@ class Media(AbstractMedia):
             raise Exception('unsupported file extension')
         return Media(album, media)
 
-    def __init__(self, album, web_ref):
+    def __init__(self, album, web_ref, path):
+        AbstractMedia.__init__(self, album, path)
         self.album = album
         self.web_ref = web_ref
         self.local_url = ''

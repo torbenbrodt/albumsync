@@ -1,4 +1,4 @@
-from service.abstract import AbstractAlbum
+from service.abstract.AbstractAlbum import AbstractAlbum
 
 
 class Album(AbstractAlbum):
@@ -6,7 +6,7 @@ class Album(AbstractAlbum):
 
     def __init__(self, path):
         """
-        @type path: string
-        @param path: absolute path
-        """
-        pass
+            @type path: string
+            @param path: absolute path
+            """
+        AbstractAlbum.__init__(self, path)
