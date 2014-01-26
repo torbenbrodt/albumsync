@@ -7,6 +7,7 @@ from service.picasa.Client import Client
 from gdata.photos.service import *
 from util.Checksum import Checksum
 from service.abstract.AbstractMedia import AbstractMedia
+from util.Superconfig import Superconfig
 
 
 class Media(AbstractMedia):
@@ -112,6 +113,8 @@ class Media(AbstractMedia):
         return self.web_ref.content.src
 
     def delete(self):
+        if not Superconfig.allowdelete:
+            raise Exception('delete is not allowed')
         #todo is it possible to move to google picasa trash?
         Client.get_client().Delete(self._get_edit_object())
 
@@ -146,3 +149,8 @@ class Media(AbstractMedia):
     def resize(self):
         #todo ask if service provides serverside resizing (so any meta data is not lost) otherwise use util.Image.resize
         pass
+
+    def __del__(self):
+        # delete temporary local file if present
+        if self.local_url:
+            os.remove(self.local_url)

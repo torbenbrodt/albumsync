@@ -60,3 +60,7 @@ class AbstractAlbum:
         @rtype : str
         """
         pass
+
+    @abstractmethod
+    def get_date(self):
+        pass

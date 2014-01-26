@@ -1,6 +1,7 @@
 from service.picasa.Client import Client
 from gdata.photos.service import *
 from service.abstract.AbstractAlbum import AbstractAlbum
+from util.Superconfig import Superconfig
 
 
 class Album(AbstractAlbum):
@@ -25,21 +26,23 @@ class Album(AbstractAlbum):
         @param album_src: source album
         @rtype Album
         """
-        web_album = Client.get_client().InsertAlbum(title=album_src.get_title(), access='private', summary='synced from ...')
+        web_album = Client.get_client().InsertAlbum(title=album_src.get_title(), access='private', summary='synced from https://github.com/torbenbrodt/albumsync')
         return Album(web_album)
 
     def save(self):
         Client.get_client().Put(self.web_ref, self.web_ref.GetEditLink().href, converter=gdata.photos.AlbumEntryFromString)
 
     def delete(self):
+        if not Superconfig.allowdelete:
+            raise Exception('delete is not allowed')
         Client.get_client().Delete(self.web_ref)
 
-    def __init__(self, web_album):
+    def __init__(self, web_album, path):
         """
-
         @type web_album: AlbumEntry
         @param web_album: object from the gdata api
         """
+        super(Album, self).__init__(path)
         self.web_ref = web_album
 
     def get_url(self):

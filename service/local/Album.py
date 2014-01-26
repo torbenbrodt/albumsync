@@ -2,6 +2,7 @@ import os
 import urllib
 from service.local.Config import Config
 from service.abstract.AbstractAlbum import AbstractAlbum
+from util.Superconfig import Superconfig
 
 
 class Album(AbstractAlbum):
@@ -64,3 +65,10 @@ class Album(AbstractAlbum):
         @rtype : string
         """
         return self.get_title()
+
+    def get_date(self):
+        return os.path.getmtime(self.path)
+
+    def delete(self):
+        if not Superconfig.allowdelete:
+            raise Exception('delete is not allowed')

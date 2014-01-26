@@ -3,6 +3,7 @@ import os
 import shutil
 from util.Checksum import Checksum
 from service.abstract.AbstractMedia import AbstractMedia
+from util.Superconfig import Superconfig
 
 
 class Media(AbstractMedia):
@@ -49,6 +50,8 @@ class Media(AbstractMedia):
         return os.path.getsize(self.get_url())
 
     def delete(self):
+        if not Superconfig.allowdelete:
+            raise Exception('delete is not allowed')
         #todo is it possible to move to some trash directory
         os.remove(self.get_url())
 
