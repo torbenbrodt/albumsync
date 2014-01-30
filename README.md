@@ -7,6 +7,9 @@ This code supports the best practice setup i discovered for my self.
 * The online images which are not shared publicly will be replaced by a lower resolution (2048x2048), since this is for free.
 * Images from my dslr (local folder system) are uploaded in lower resolution to google plus photos.
 
+Needs pyexiv2 to resize images without loosing exif data
+* apt-get install python-pyexiv2
+
 Needs gdata python library version 1
 * download https://code.google.com/p/gdata-python-client/downloads/detail?name=gdata-1.3.3.tar.gz&can=2&q=
 * unzip and run within directory: sudo python setup.py install
