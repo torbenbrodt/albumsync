@@ -30,6 +30,12 @@ class SyncMediaTest(unittest.TestCase):
         shutil.copyfile(path_test, path_target)
         media_src = Media(album_src, path_src)
         media_target = Media(album_target, path_target)
-        # compare
         sync = SyncMedia(media_src, media_target)
-        sync.run()
+        # compare
+        self.assertTrue(sync.is_hash())
+        self.assertTrue(sync.is_filesize_greater_than())
+        self.assertTrue(sync.is_date_greater_than())
+        self.assertTrue(sync.is_dimensions_greater_than())
+        self.assertFalse(sync.is_update_needed())
+        # action
+        self.run()
