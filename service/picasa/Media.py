@@ -6,6 +6,7 @@ import shutil
 from service.picasa.Client import Client
 from gdata.photos.service import *
 from util.Checksum import Checksum
+from util.ImageHelper import ImageHelper
 from service.abstract.AbstractMedia import AbstractMedia
 from util.Superconfig import Superconfig
 
@@ -50,7 +51,7 @@ class Media(AbstractMedia):
         if mimeType in Media.supportedImageFormats:
             media = Client.get_client().InsertPhoto(album.webAlbum.albumUri, metadata, media_src.get_local_url(), mimeType)
         elif mimeType in Media.supportedVideoFormats:
-            if media_src.get_size() > Media.MAX_VIDEO_SIZE:
+            if media_src.get_filesize() > Media.MAX_VIDEO_SIZE:
                 raise Exception("Not uploading %s because it exceeds maximum file size" % media_src.get_url())
             media = Client.get_client().InsertVideo(album.get_url(), metadata, media_src.get_local_url(), mimeType)
         else:
@@ -89,9 +90,15 @@ class Media(AbstractMedia):
     def get_hash(self):
         return self.web_ref.checksum.text
 
-    def get_size(self):
+    def get_filesize(self):
         """in bytes"""
         return int(self.web_ref.size.text)
+
+    def get_dimensions(self):
+        """
+        @rtype: list of int
+        """
+        return [int(self.web_ref.width.text), int(self.web_ref.height.text)]
 
     def get_date(self):
         return time.mktime(
@@ -142,13 +149,12 @@ class Media(AbstractMedia):
         #todo how to check album access against public
         if self.album.web_ref.access == 'public':
             return False
-        width = int(self.web_ref.width.text)
-        height = int(self.web_ref.height.text)
+        width, height = self.get_dimensions()
         return width > self.MAX_FREE_IMAGE_DIMENSION or height > self.MAX_FREE_IMAGE_DIMENSION
 
     def resize(self):
-        #todo ask if service provides serverside resizing (so any meta data is not lost) otherwise use util.Image.resize
-        pass
+        ImageHelper.resize(self.get_local_url(), self.MAX_FREE_IMAGE_DIMENSION, self.MAX_FREE_IMAGE_DIMENSION)
+        # todo self.upload
 
     def __del__(self):
         # delete temporary local file if present

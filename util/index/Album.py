@@ -16,6 +16,7 @@ class Album:
         self.path = os.path.join(util.index.Config.Config.dir, self.service.__name__ + '.index')
 
     def update(self):
+        # skip if there is no directory to be indexed
         if not util.index.Config.Config.dir:
             return
         # read media from service

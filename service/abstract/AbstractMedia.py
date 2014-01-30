@@ -58,7 +58,7 @@ class AbstractMedia:
         pass
 
     @abstractmethod
-    def get_size(self):
+    def get_filesize(self):
         """
         return size in bytes
         @rtype: int
@@ -82,6 +82,13 @@ class AbstractMedia:
     def get_description(self):
         """
         @rtype: str
+        """
+        pass
+
+    @abstractmethod
+    def get_dimensions(self):
+        """
+        @rtype: list of int
         """
         pass
 
