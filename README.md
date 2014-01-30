@@ -14,6 +14,10 @@ Needs gdata python library version 1
 * download https://code.google.com/p/gdata-python-client/downloads/detail?name=gdata-1.3.3.tar.gz&can=2&q=
 * unzip and run within directory: sudo python setup.py install
 
+Testing
+[![Build Status](https://travis-ci.org/torbenbrodt/albumsync.png)](https://travis-ci.org/torbenbrodt/albumsync)
+ * Results can be found at https://travis-ci.org/torbenbrodt/albumsync
+
 # Similar Projects
 https://github.com/leocrawford/picasawebsync
 * i still consider pushing my changes back, but i did not like the codebase
