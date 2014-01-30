@@ -1,5 +1,6 @@
 import os
 import json
+import time
 import util.index.Config
 
 
@@ -24,14 +25,14 @@ class Album:
         # check existing data for deletion
         for match_name, album in data_index.items():
             if match_name not in data_service:
-                data_index[match_name]['deleted'] = True
+                data_index[match_name]['deleted'] = time.time()
             elif 'deleted' in album and album['deleted']:
                 data_index[match_name].pop('deleted')
 
         for match_name, album in data_service.items():
             if match_name not in data_index:
                 data_index[album.get_match_name()] = {
-                    'date': album.get_date()
+                    'indexed': album.get_date()
                 }
 
         fileref = open(self.path, 'w')

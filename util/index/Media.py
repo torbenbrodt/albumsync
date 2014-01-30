@@ -1,5 +1,6 @@
 import os
 import json
+import time
 import util.index.Config
 
 
@@ -25,14 +26,14 @@ class Media:
         # check existing data for deletion
         for match_name, media in data_index.items():
             if match_name not in data_service:
-                data_index[match_name]['deleted'] = True
+                data_index[match_name]['deleted'] = time.time()
             elif 'deleted' in media and media['deleted']:
                 data_index[match_name].pop('deleted')
 
         for match_name, media in data_service.items():
             if match_name not in data_index:
                 data_index[media.get_match_name()] = {
-                    'date': media.get_date()
+                    'indexed': media.get_date()
                 }
 
         fileref = open(self.path, 'w')
