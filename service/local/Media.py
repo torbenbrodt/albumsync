@@ -1,6 +1,7 @@
 import mimetypes
 import os
 import shutil
+from PIL import Image
 from util.Checksum import Checksum
 from service.abstract.AbstractMedia import AbstractMedia
 from util.Superconfig import Superconfig
@@ -24,8 +25,16 @@ class Media(AbstractMedia):
 
     @staticmethod
     def create(album, media_src):
+        """
+
+        @param album:
+        @param media_src:
+        @rtype media_src: AbstractMedia
+        @return:
+        """
         path = os.path.join(album.get_url(), media_src.get_title())
         media_src.download(path)
+        os.utime(path, (media_src.get_date(), media_src.get_date()))
         return Media(album, path)
 
     def __init__(self, album, path):
@@ -46,7 +55,7 @@ class Media(AbstractMedia):
     def get_date(self):
         return os.path.getmtime(self.get_url())
 
-    def get_size(self):
+    def get_filesize(self):
         return os.path.getsize(self.get_url())
 
     def delete(self):
@@ -60,6 +69,9 @@ class Media(AbstractMedia):
 
     def get_description(self):
         return self.path
+
+    def get_dimensions(self):
+        return Image.open(self.path).size
 
     def get_mime_type(self):
         return mimetypes.guess_type(self.path)[0]
@@ -75,5 +87,4 @@ class Media(AbstractMedia):
         return False
 
     def resize(self):
-        #todo use util.Image.resize
         pass

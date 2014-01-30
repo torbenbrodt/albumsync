@@ -1,6 +1,7 @@
 import tempfile
 import unittest
 import os
+import time
 from service.local.Config import Config
 from service.local.Album import Album
 from service.local.Media import Media
@@ -35,13 +36,18 @@ class MediaTest(unittest.TestCase):
         os.makedirs(self.dir + '/a')
         album_src = Album(self.dir + '/a')
         open(self.dir + '/a/fileA.jpg', 'a').close()
+        time_ago = round(time.time() - 6000, 2)
+        os.utime(self.dir + '/a/fileA.jpg', (time_ago, time_ago))
         media_src = Media(album_src, self.dir + '/a/fileA.jpg')
         # create target
         os.makedirs(self.dir + '/b')
         album_target = Album(self.dir + '/b')
         # should be empty
         self.assertIs(0, len(service.local.Media.Media.fetch_all(album_target)))
+        time.sleep(0.1)
         Media.create(album_target, media_src)
+        # datum should be transferred
+        self.assertEquals(time_ago, round(media_src.get_date(), 2))
         self.assertIs(1, len(service.local.Media.Media.fetch_all(album_target)))
 
     def test_get_title(self):
