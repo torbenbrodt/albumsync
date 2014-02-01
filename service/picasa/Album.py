@@ -3,6 +3,7 @@ from service.picasa.Client import Client
 from gdata.photos.service import *
 from service.abstract.AbstractAlbum import AbstractAlbum
 from util.Superconfig import Superconfig
+from util.Deduplicator import Deduplicator
 
 
 class Album(AbstractAlbum):
@@ -12,13 +13,14 @@ class Album(AbstractAlbum):
         """walk the web album finding albums there
         @rtype : list of Album
         """
-
         # todo How to list and download albums which are shared with me? Community search?
         # photos = gd_client.SearchCommunityPhotos('puppy', limit='10')
-        entries = []
-        for web_album in Client.get_client().GetUserFeed().entry:
-            entries.append(Album(web_album))
-        return entries
+        feed = Client.get_client().GetUserFeed().entry
+        # picasa can have multiple albums with the same name
+        # so prepend the unique id, in case of duplicate
+        dedu = Deduplicator()
+        return dedu.run_list(feed, lambda web_ref: Album(web_ref),
+                             lambda web_ref: int(web_ref.id.text.split('/')[-1]))
 
     @staticmethod
     def create(album_src):
@@ -27,7 +29,8 @@ class Album(AbstractAlbum):
         @param album_src: source album
         @rtype Album
         """
-        web_album = Client.get_client().InsertAlbum(title=album_src.get_title(), access='private', summary='synced from https://github.com/torbenbrodt/albumsync')
+        web_album = Client.get_client().InsertAlbum(title=album_src.get_title(), access='private',
+                                                    summary='synced from https://github.com/torbenbrodt/albumsync')
         return Album(web_album)
 
     def save(self):
@@ -46,6 +49,7 @@ class Album(AbstractAlbum):
         if type(web_album) is str:
             web_album = Client.get_client().GetFeed(web_album)
         self.web_ref = web_album
+        self.title = ''
 
     def get_url(self):
         """
@@ -53,10 +57,15 @@ class Album(AbstractAlbum):
         """
         return self.web_ref.GetPhotosUri()
 
+    def set_title(self, title):
+        self.title = title
+
     def get_title(self):
         """
         @rtype : string
         """
+        if self.title:
+            return self.title
         return self.web_ref.title.text
 
     def get_match_name(self):

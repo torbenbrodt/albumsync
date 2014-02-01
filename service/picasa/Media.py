@@ -9,6 +9,7 @@ from util.Checksum import Checksum
 from util.ImageHelper import ImageHelper
 from service.abstract.AbstractMedia import AbstractMedia
 from util.Superconfig import Superconfig
+from util.Deduplicator import Deduplicator
 
 
 class Media(AbstractMedia):
@@ -24,15 +25,17 @@ class Media(AbstractMedia):
     @staticmethod
     def fetch_all(album):
         """
-        @type album: Album
+        @type album: AbstractAlbum
         @param album:
         @return:
         @rtype : list of Media
         """
-        entries = []
-        for web_ref in Client.get_client().GetFeed(album.get_url()).entry:
-            entries.append(Media(album, web_ref))
-        return entries
+        # todo this feed does not include foreign images (e.g. Hangout Album)
+        feed = Client.get_client().GetFeed(album.get_url()).entry
+        # picasa can have multiple media with the same filename in a single album
+        # so prepend the unique id, in case of duplicate
+        dedu = Deduplicator()
+        return dedu.run_list(feed, lambda web_ref: Media(album, web_ref), lambda web_ref: int(web_ref.gphoto_id.text))
 
     @staticmethod
     def create(album, media_src):
@@ -42,7 +45,7 @@ class Media(AbstractMedia):
         @param media_src:
         @return: Media
         """
-        mimeType = media_src.get_mim_type()
+        mimeType = media_src.get_mime_type()
 
         metadata = gdata.photos.PhotoEntry()
         metadata.title = atom.Title(text=urllib.quote(media_src.get_title(), ''))
@@ -62,6 +65,7 @@ class Media(AbstractMedia):
     def __init__(self, album, web_ref):
         self.album = album
         self.web_ref = web_ref
+        self.title = ''
         self.local_url = ''
         self.changed = []
 
@@ -114,13 +118,15 @@ class Media(AbstractMedia):
         return time.mktime(
             time.strptime(re.sub("\.[0-9]{3}Z$", ".000 UTC", self.web_ref.updated.text), '%Y-%m-%dT%H:%M:%S.000 %Z'))
 
+    def set_title(self, title):
+        self.title = title
+
     def get_title(self):
         """title"""
-        # cleanup title
-        if self.web_ref.title.text is None:
-            return ''
-        else:
-            return urllib.unquote(self.web_ref.title.text)
+        if self.title:
+            return self.title
+        assert self.web_ref.title.text, 'title is empty'
+        return urllib.unquote(self.web_ref.title.text)
 
     def get_description(self):
         """description"""

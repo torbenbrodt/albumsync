@@ -8,7 +8,8 @@ class Purge:
 
     def __init__(self, service, album_str):
         assert service, "when using list action, src cannot be empty"
-        self.service = service
+        boot = util.Bootstrap.Bootstrap()
+        self.service = boot.get_service(service)
         self.album_str = album_str
 
     def purge_media(self, album):

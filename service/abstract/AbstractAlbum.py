@@ -40,6 +40,10 @@ class AbstractAlbum:
         pass
 
     @abstractmethod
+    def set_title(self, title):
+        pass
+
+    @abstractmethod
     def get_title(self):
         """
         @rtype : str

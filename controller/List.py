@@ -8,7 +8,8 @@ class List:
 
     def __init__(self, service, album_str):
         assert service, "when using list action, src cannot be empty"
-        self.service = service
+        boot = util.Bootstrap.Bootstrap()
+        self.service = boot.get_service(service)
         self.album_str = album_str
 
     def list_media(self, album):
@@ -18,7 +19,7 @@ class List:
             print entry.get_match_name()
         # print existing
         for entry in self.service.Media.Media.fetch_all(album):
-            print entry.get_match_name(), entry.get_url()
+            print '{0:40} {1}'.format(entry.get_match_name()[0:40], entry.get_url())
 
     def list_album(self):
         # print deleted
@@ -27,7 +28,7 @@ class List:
             print entry.get_match_name()
         # print existing
         for entry in self.service.Album.Album.fetch_all():
-            print entry.get_match_name(), entry.get_url()
+            print '{0:40} {1}'.format(entry.get_match_name()[0:40], entry.get_url())
 
     def run(self):
         if self.album_str:

@@ -1,5 +1,4 @@
 import os
-import urllib
 from service.local.Config import Config
 from service.abstract.AbstractAlbum import AbstractAlbum
 from util.Superconfig import Superconfig
@@ -32,7 +31,7 @@ class Album(AbstractAlbum):
         @rtype Album
         """
         assert Config.dir, "Config.dir cannot be empty"
-        path = Config.dir + '/' + urllib.quote(album_src.get_title())
+        path = Config.dir + '/' + album_src.get_title()
         os.makedirs(path)
         return Album(path)
 
@@ -43,6 +42,7 @@ class Album(AbstractAlbum):
         """
         assert Config.dir, "Config.dir cannot be empty"
         self.path = path
+        self.title = ''
 
     def get_url(self):
         """
@@ -50,10 +50,15 @@ class Album(AbstractAlbum):
         """
         return self.path
 
+    def set_title(self, title):
+        self.title = title
+
     def get_title(self):
         """
         @rtype : string
         """
+        if self.title:
+            return self.title
         return self.path[len(Config.dir) + 1:]
 
     def get_number_of_media(self):

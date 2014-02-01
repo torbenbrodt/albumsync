@@ -3,7 +3,6 @@ import logging
 from controller.Sync import Sync
 from controller.List import List
 from controller.Purge import Purge
-import util.Bootstrap
 
 
 class Front:
@@ -72,15 +71,15 @@ class Front:
             Front.run_assertions(args)
             # setting configs
             Front.update_config(args)
-            boot = util.Bootstrap.Bootstrap()
+            # run action
             if args.sync:
-                ctrl = Sync(boot.get_service(args.src), boot.get_service(args.target))
+                ctrl = Sync(args.src, args.target, args.album)
                 ctrl.run()
             elif args.list:
-                ctrl = List(boot.get_service(args.src), args.album)
+                ctrl = List(args.src, args.album)
                 ctrl.run()
             elif args.list:
-                ctrl = Purge(boot.get_service(args.src), args.album)
+                ctrl = Purge(args.src, args.album)
                 ctrl.run()
 
         except AssertionError as e:
