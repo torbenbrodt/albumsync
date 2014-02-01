@@ -30,7 +30,6 @@ class SyncTest(unittest.TestCase):
             self.skipTest("The user setup in ~/albumsync.ini does not look like a test user"
                           + ", don't run tests against production system.")
         # create some remote albums
-        # todo create some remote albums
         sync = Sync(service.picasa, service.local)
         sync.run()
 

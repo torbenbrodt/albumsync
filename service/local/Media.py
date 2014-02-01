@@ -60,7 +60,6 @@ class Media(AbstractMedia):
     def delete(self):
         if not Superconfig.allowdelete:
             raise Exception('delete is not allowed')
-        #todo is it possible to move to some trash directory
         os.remove(self.get_url())
 
     def get_title(self):

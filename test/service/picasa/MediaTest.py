@@ -25,8 +25,7 @@ class MediaTest(unittest.TestCase):
             print media.get_title()
 
     def test_get_hash(self):
-        # todo test1 with empty hash
-        # todo test2 with hash written back
+        self.skipTest("needs implementation")
         pass
 
 
