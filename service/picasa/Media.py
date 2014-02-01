@@ -159,3 +159,9 @@ class Media(AbstractMedia):
         # delete temporary local file if present
         if self.local_url:
             os.remove(self.local_url)
+
+    def validate(self):
+        """make this object valid
+        """
+        if not self.get_hash():
+            self.save()

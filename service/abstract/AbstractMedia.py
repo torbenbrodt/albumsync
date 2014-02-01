@@ -124,3 +124,8 @@ class AbstractMedia:
         """void method
         """
         pass
+
+    def validate(self):
+        """make this object valid
+        """
+        pass

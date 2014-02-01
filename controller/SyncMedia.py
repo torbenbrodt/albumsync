@@ -56,12 +56,8 @@ class SyncMedia:
 
     def run(self):
         # before comparing ensure, that objects are valid
-        # todo calls might be better at another place
-        if not self.media_src.get_hash():
-            self.media_src.save()
-
-        if not self.media_target.get_hash():
-            self.media_target.save()
+        self.media_src.validate()
+        self.media_target.validate()
 
         # then run optional resize of media_src
         if self.media_src.is_resize_necessary():
@@ -70,4 +66,3 @@ class SyncMedia:
         #todo Do local backups if files are overwritten
         #todo Update meta data (including version?)
         #todo think about etag usage, https://developers.google.com/picasa-web/docs/2.0/developers_guide_protocol
-        pass
