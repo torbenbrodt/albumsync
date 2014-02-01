@@ -11,7 +11,7 @@ class AlbumTest(unittest.TestCase):
         self.dir = tempfile.mkdtemp()
         Config.dir = self.dir
 
-    def test_fetchAll(self):
+    def test_fetch_all(self):
         # create some directories
         os.makedirs(self.dir + '/2013/a')
         os.makedirs(self.dir + '/2013/b')

@@ -16,7 +16,7 @@ class MediaTest(unittest.TestCase):
         self.dir = tempfile.mkdtemp()
         Config.dir = self.dir
 
-    def test_fetchAll(self):
+    def test_fetch_all(self):
         # create directory
         os.makedirs(self.dir + '/2014')
         album = Album(self.dir + '/2014')
@@ -24,12 +24,17 @@ class MediaTest(unittest.TestCase):
         open(self.dir + '/2014/fileA.jpg', 'a').close()
         open(self.dir + '/2014/fileB.jpg', 'a').close()
         open(self.dir + '/2014/fileC.jpg', 'a').close()
-        # find those directories
+        # find those files
         self.assertIs(3, len(service.local.Media.Media.fetch_all(album)))
         # check contents
         x = map(lambda media: media.get_title(), service.local.Media.Media.fetch_all(album))
         x.sort()
         self.assertEquals(['fileA.jpg', 'fileB.jpg', 'fileC.jpg'], x)
+        # create nested level, but ensure that parent media does not find it
+        os.makedirs(self.dir + '/2014/nested')
+        open(self.dir + '/2014/nested/fileD.jpg', 'a').close()
+        open(self.dir + '/2014/nested/fileE.jpg', 'a').close()
+        self.assertIs(3, len(service.local.Media.Media.fetch_all(album)))
 
     def test_create(self):
         # create source

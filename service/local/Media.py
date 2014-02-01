@@ -16,10 +16,9 @@ class Media(AbstractMedia):
         @rtype : list of Album
         """
         entries = []
-        for root, dirs, files in os.walk(album.get_url()):
-            for path in files:
-                #todo needs depth check
-                media_path = os.path.join(root, path)
+        for path in os.listdir(album.get_url()):
+            media_path = os.path.join(album.get_url(), path)
+            if os.path.isfile(media_path):
                 entries.append(Media(album, media_path))
         return entries
 
