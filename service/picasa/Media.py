@@ -1,3 +1,4 @@
+import logging
 import mimetypes
 import tempfile
 import urllib
@@ -30,8 +31,10 @@ class Media(AbstractMedia):
         @return:
         @rtype : list of Media
         """
-        # todo this feed does not include foreign images (e.g. Hangout Album)
-        feed = Client.get_client().GetFeed(album.get_url()).entry
+        # this feed does not include foreign images (e.g. Hangout Album)
+        # to download full resolution images the imgmax=d is added
+        feed_url = album.get_url() + '&imgmax=d'
+        feed = Client.get_client().GetFeed(feed_url).entry
         # picasa can have multiple media with the same filename in a single album
         # so prepend the unique id, in case of duplicate
         dedu = Deduplicator()
@@ -45,19 +48,18 @@ class Media(AbstractMedia):
         @param media_src:
         @return: Media
         """
-        mimeType = media_src.get_mime_type()
-
+        mime_type = media_src.get_mime_type()
         metadata = gdata.photos.PhotoEntry()
         metadata.title = atom.Title(text=urllib.quote(media_src.get_title(), ''))
         metadata.summary = atom.Summary(text=media_src.get_description(), summary_type='text')
         metadata.checksum = gdata.photos.Checksum(text=media_src.get_hash())
-        if mimeType in Media.supportedImageFormats:
+        if mime_type in Media.supportedImageFormats:
             media = Client.get_client().InsertPhoto(album.webAlbum.albumUri,
-                                                    metadata, media_src.get_local_url(), mimeType)
-        elif mimeType in Media.supportedVideoFormats:
+                                                    metadata, media_src.get_local_url(), mime_type)
+        elif mime_type in Media.supportedVideoFormats:
             if media_src.get_filesize() > Media.MAX_VIDEO_SIZE:
                 raise Exception("Not uploading %s because it exceeds maximum file size" % media_src.get_url())
-            media = Client.get_client().InsertVideo(album.get_url(), metadata, media_src.get_local_url(), mimeType)
+            media = Client.get_client().InsertVideo(album.get_url(), metadata, media_src.get_local_url(), mime_type)
         else:
             raise Exception('unsupported file extension')
         return Media(album, media)
@@ -78,7 +80,7 @@ class Media(AbstractMedia):
 
         # checksum is not trustable, see http://code.google.com/p/gdata-issues/issues/detail?id=2351
         media_hash = self.get_hash()
-        if 'blob' in self.changed or not media_hash:
+        if 'blob' in self.changed or len(media_hash) != 32:
             media_hash = Checksum.get_md5(self.get_local_url())
             entry.checksum = gdata.photos.Checksum(text=media_hash)
 
@@ -106,13 +108,20 @@ class Media(AbstractMedia):
 
     def get_filesize(self):
         """in bytes"""
-        return int(self.web_ref.size.text)
+        bytes = int(self.web_ref.size.text)
+        # when we download picasa images they are equal
+        # when we upload and download images they are 218 bytes bigger
+        bytes -= 218
+        return bytes
 
     def get_dimensions(self):
         """
         @rtype: list of int
         """
         return [int(self.web_ref.width.text), int(self.web_ref.height.text)]
+
+    def get_creation_time(self):
+        return time.mktime(time.localtime(int(self.web_ref.timestamp.text)/1000))
 
     def get_modification_time(self):
         return time.mktime(
@@ -166,28 +175,26 @@ class Media(AbstractMedia):
         width, height = self.get_dimensions()
         return width > self.MAX_FREE_IMAGE_DIMENSION or height > self.MAX_FREE_IMAGE_DIMENSION
 
+    def update_blob(self, url):
+        self.local_url = url
+        self.changed.append('blob')
+
     def resize(self):
         """
-        call save() afterwards!
         @return: result if image was changed
         """
-        tmp = self.local_url
-        self.local_url = ImageHelper.resize(self.get_local_url(),
-                                            self.MAX_FREE_IMAGE_DIMENSION,
-                                            self.MAX_FREE_IMAGE_DIMENSION)
-        # check if the image changed
-        changed = tmp != self.local_url
-        if changed:
-            self.changed.append('blob')
-        return changed
-
-    def __del__(self):
-        # delete temporary local file if present
-        if self.local_url:
-            os.remove(self.local_url)
+        new_url = ImageHelper.resize(self.get_local_url(),
+                                     self.MAX_FREE_IMAGE_DIMENSION,
+                                     self.MAX_FREE_IMAGE_DIMENSION)
+        if self.get_local_url() != new_url:
+            self.update_blob(new_url)
+            return True
+        else:
+            return False
 
     def validate(self):
         """make this object valid
         """
-        if not self.get_hash():
+        if len(self.get_hash()) != 32:
             self.save()
+            logging.getLogger().warn('hash was invalid, updated to ' + self.get_hash())

@@ -27,21 +27,21 @@ class Sync:
             index.update()
             for album_src in index.fetch_all_deleted():
                 if album_src.get_match_name() in albums_targets_dict:
-                    logging.getLogger().info(album_src.get_match_name() + ', delete album match: yes')
+                    logging.getLogger().debug('-- ' + album_src.get_match_name() + ' -- index, will delete album')
                     media_target = albums_targets_dict[album_src.get_match_name()]
                     media_target.delete()
                 else:
-                    logging.getLogger().info(album_src.get_match_name() + ', delete album match: no')
+                    logging.getLogger().debug('-- ' + album_src.get_match_name() + ' -- index, will skip album')
             album_src_list = self.service_src.Album.Album.fetch_all()
         self.sync_service(album_src_list, albums_targets_dict)
 
     def sync_service(self, album_src_list, albums_targets_dict):
         for album_src in album_src_list:
             if album_src.get_match_name() in albums_targets_dict:
-                logging.getLogger().info(album_src.get_match_name() + ', album match: yes')
+                logging.getLogger().debug('-- ' + album_src.get_match_name() + ' -- sync, will sync existing album')
                 album_target = albums_targets_dict[album_src.get_match_name()]
             else:
-                logging.getLogger().info(album_src.get_match_name() + ', album match: no')
+                logging.getLogger().debug('-- ' + album_src.get_match_name() + ' -- sync, will create new album')
                 album_target = self.service_target.Album.Album.create(album_src)
 
             album = SyncAlbum(self.service_src, self.service_target, album_src, album_target)

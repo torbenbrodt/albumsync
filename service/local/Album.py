@@ -32,6 +32,7 @@ class Album(AbstractAlbum):
         """
         assert Config.dir, "Config.dir cannot be empty"
         path = Config.dir + '/' + album_src.get_title()
+        path.rstrip(os.pathsep)
         os.makedirs(path)
         return Album(path)
 
@@ -59,7 +60,7 @@ class Album(AbstractAlbum):
         """
         if self.title:
             return self.title
-        return self.path[len(Config.dir) + 1:]
+        return self.path[len(Config.dir):]
 
     def get_number_of_media(self):
         """

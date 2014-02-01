@@ -21,19 +21,19 @@ class SyncAlbum:
         index.update()
         for media_src in index.fetch_all_deleted():
             if media_src.get_match_name() in medias_targets_dict:
-                logging.getLogger().info(media_src.get_match_name() + ', delete media match: yes')
+                logging.getLogger().debug('-- ' + media_src.get_match_name() + ' -- index, will delete media')
                 media_target = medias_targets_dict[media_src.get_match_name()]
                 media_target.delete()
             else:
-                logging.getLogger().info(media_src.get_match_name() + ', delete media match: no')
+                logging.getLogger().debug('-- ' + media_src.get_match_name() + ' -- index, will skip media')
 
         # upload new media
         for media_src in self.service_src.Media.Media.fetch_all(self.album_src):
             if media_src.get_match_name() in medias_targets_dict:
-                logging.getLogger().info(media_src.get_match_name() + ', update media match: yes')
+                logging.getLogger().debug('-- ' + media_src.get_match_name() + ' -- sync, will sync existing media')
                 media_target = medias_targets_dict[media_src.get_match_name()]
             else:
-                logging.getLogger().info(media_src.get_match_name() + ', update media match: no')
+                logging.getLogger().debug('-- ' + media_src.get_match_name() + ' -- sync, will create new media')
                 media_target = self.service_target.Media.Media.create(self.album_target, media_src)
 
             media = SyncMedia(media_src, media_target)

@@ -31,7 +31,7 @@ class Front:
 
         # super config
         parser.add_argument('--log', help='possible values are DEBUG, INFO, WARN', default='warn', metavar='warn')
-        parser.add_argument('--allowdelete', help='are deletion commando', type=bool, metavar=False)
+        parser.add_argument('--allowdelete', help='is delete allowed', type=bool, metavar=False)
 
         # source and target
         parser.add_argument('--src', help='source service e.g. local', metavar='service')
@@ -84,4 +84,3 @@ class Front:
 
         except AssertionError as e:
             print parser.format_usage() + "\nAssertionError: " + e.message
-            exit()

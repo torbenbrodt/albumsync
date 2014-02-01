@@ -44,6 +44,13 @@ class AbstractMedia:
         pass
 
     @abstractmethod
+    def get_local_url(self):
+        """
+        @rtype: str
+        """
+        pass
+
+    @abstractmethod
     def get_hash(self):
         """
         @rtype: str
@@ -52,6 +59,13 @@ class AbstractMedia:
 
     @abstractmethod
     def get_modification_time(self):
+        """
+        returns date
+        """
+        pass
+
+    @abstractmethod
+    def get_creation_time(self):
         """
         returns date
         """
@@ -121,8 +135,18 @@ class AbstractMedia:
 
     @abstractmethod
     def resize(self):
-        """void method
         """
+        void method
+        call save() afterwards!
+        """
+        pass
+
+    @abstractmethod
+    def update_blob(self, url):
+        pass
+
+    @abstractmethod
+    def save(self):
         pass
 
     def validate(self):

@@ -13,8 +13,6 @@ class Album(AbstractAlbum):
         """walk the web album finding albums there
         @rtype : list of Album
         """
-        # todo How to list and download albums which are shared with me? Community search?
-        # photos = gd_client.SearchCommunityPhotos('puppy', limit='10')
         feed = Client.get_client().GetUserFeed().entry
         # picasa can have multiple albums with the same name
         # so prepend the unique id, in case of duplicate
@@ -34,7 +32,8 @@ class Album(AbstractAlbum):
         return Album(web_album)
 
     def save(self):
-        Client.get_client().Put(self.web_ref, self.web_ref.GetEditLink().href, converter=gdata.photos.AlbumEntryFromString)
+        Client.get_client().Put(self.web_ref, self.web_ref.GetEditLink().href,
+                                converter=gdata.photos.AlbumEntryFromString)
 
     def delete(self):
         if not Superconfig.allowdelete:

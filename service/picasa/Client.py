@@ -4,7 +4,10 @@ from service.picasa.Config import Config
 
 
 class Client:
-    """see https://developers.google.com/picasa-web/docs/2.0/developers_guide_protocol"""
+    """
+    see https://developers.google.com/picasa-web/docs/2.0/developers_guide_protocol
+    see https://code.google.com/p/googlecl/source/browse/trunk/src/googlecl/picasa/service.py
+    """
 
     def __init__(self):
         pass

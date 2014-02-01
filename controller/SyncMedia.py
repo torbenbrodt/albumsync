@@ -14,55 +14,109 @@ class SyncMedia:
         self.media_src = media_src
         self.media_target = media_target
 
-    def is_hash(self):
-        """checksum is not that trustable, picasa does not update hash
+    def _is_hash_different(self):
+        """
+        checksum is not that trustable, picasa does not update hash automatically
+        if hash is the different, then the target may want an update
+        if hash is the same, then there is no update needed
+        @return: true if target item should get an update
         @rtype: bool
         """
-        res = self.media_target.get_hash() == self.media_src.get_hash()
-        logging.getLogger().debug('is hash' + str(res))
+        res = self.media_target.get_hash() != self.media_src.get_hash()
+        if res:
+            logging.getLogger().debug('UPDATE hash: is different %s vs %s' %
+                                      (self.media_target.get_hash(), self.media_src.get_hash()))
         return res
 
-    def is_filesize_greater_than(self):
-        """if source file is bigger than target file
+    def _is_filesize_greater_than(self):
+        """
+        if source file is greater than target file, then the target may want an update
+        if target file is greater than source file, then there is no update needed
+        @return: true if target item should get an update
         @rtype: bool
         """
-        res = self.media_target.get_filesize() >= self.media_src.get_filesize()
-        logging.getLogger().debug('is target greater than ' + str(res))
+        res = self.media_src.get_filesize() > self.media_target.get_filesize()
+        if res:
+            logging.getLogger().debug('UPDATE filesize: %s is greater than %s' %
+                                      (self.media_src.get_filesize(), self.media_target.get_filesize()))
         return res
 
-    def is_dimensions_greater_than(self):
-        """if source file is bigger than target file,
+    def _is_dimensions_greater_than(self):
+        """
+        if source file is greater than target file, then the target may want an update
+        if target file is greater than source file, then there is no update needed
+        @return: true if target item should get an update
         @rtype: bool
         """
         src_width, src_height = self.media_src.get_dimensions()
         target_width, target_height = self.media_target.get_dimensions()
-        res = (src_width * src_height) >= (target_width * target_height)
-        logging.getLogger().debug('is target greater than ' + str(res))
+        res = (src_width * src_height) > (target_width * target_height)
+        if res:
+            logging.getLogger().debug('UPDATE dimensions: %s is greater than %s' %
+                                      (self.media_src.get_dimensions(), self.media_target.get_dimensions()))
         return res
 
-    def is_modification_time_greater_than(self):
-        res = self.media_src.get_modification_time() >= self.media_target.get_modification_time()
-        logging.getLogger().debug('is modification time greater than ' + str(res))
+    def _is_creation_time_greater_than(self):
+        """
+        if source file is newer than target file, then the target may want an update
+        if target file is newer than source file, then there is no update needed
+        @return: true if target item should get an update
+        @rtype: bool
+        """
+        res = self.media_src.get_creation_time() > self.media_target.get_creation_time()
+        if res:
+            logging.getLogger().debug('UPDATE creation time: %s is greater than %s' %
+                                      (self.media_src.get_creation_time(), self.media_target.get_creation_time()))
         return res
 
-    def is_update_needed(self):
-        if not self.is_filesize_greater_than():
-            return True
-        if not self.is_dimensions_greater_than():
-            return True
-        if not self.is_modification_time_greater_than():
-            return True
-        return False
+    def _is_modification_time_greater_than(self):
+        """
+        if source file is newer than target file, then the target may want an update
+        if target file is newer than source file, then there is no update needed
+        @return: true if target item should get an update
+        @rtype: bool
+        """
+        res = self.media_src.get_modification_time() > self.media_target.get_modification_time()
+        if res:
+            logging.getLogger().debug('UPDATE modification time: %s is greater than %s' %
+                                      (self.media_src.get_modification_time(), self.media_target.get_modification_time()))
+        return res
+
+    def get_score(self):
+        score = 0
+        if self._is_hash_different():
+            score += 1
+        if self._is_creation_time_greater_than():
+            score += 2
+        else:
+            # its a good sign if modification time wants to update
+            score -= 2
+        # modification time possible due to crc update
+        if self._is_modification_time_greater_than():
+            score += 1
+        else:
+            # its a good sign if modification time wants to update
+            score -= 1
+        if self._is_filesize_greater_than():
+            score += 1
+        if self._is_dimensions_greater_than():
+            score += 1
+        return score
 
     def run(self):
         # before comparing ensure, that objects are valid
         self.media_src.validate()
         self.media_target.validate()
 
-        # then run optional resize of media_src
-        if self.media_src.is_resize_necessary():
-            self.media_src.resize()
-
-        #todo Do local backups if files are overwritten
-        #todo Update meta data (including version?)
-        #todo think about etag usage, https://developers.google.com/picasa-web/docs/2.0/developers_guide_protocol
+        score = self.get_score()
+        if score > 0:
+            logging.getLogger().info('target img is outdated')
+            self.media_target.update_blob(self.media_src)
+        if self.media_target.is_resize_necessary():
+            logging.getLogger().info('target img is too big')
+            if self.media_target.resize():
+                score = 1
+        if score > 0:
+            logging.getLogger().warn('target img will be updated, resulting score is ' + str(score))
+            #self.media_src.save()
+            pass

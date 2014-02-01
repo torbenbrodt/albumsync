@@ -1,6 +1,8 @@
 import mimetypes
 import os
+import pyexiv2
 import shutil
+import time
 from PIL import Image
 from util.Checksum import Checksum
 from service.abstract.AbstractMedia import AbstractMedia
@@ -44,15 +46,27 @@ class Media(AbstractMedia):
         AbstractMedia.__init__(self, album, path)
         self.album = album
         self.path = path
+        self.path_init = path
     
-    def get_url(self):
+    def get_local_url(self):
         return self.path
+
+    def get_url(self):
+        return self.get_local_url()
 
     def get_hash(self):
         return Checksum.get_md5(self.get_url())
 
     def get_modification_time(self):
         return os.path.getmtime(self.get_url())
+
+    def get_creation_time(self):
+        metadata = pyexiv2.ImageMetadata(self.path)
+        metadata.read()
+        # 10h difference for 2001/01 Australien
+        if 'Exif.Photo.DateTimeOriginal' in metadata.exif_keys:
+            return time.mktime(metadata['Exif.Photo.DateTimeOriginal'].value.timetuple())
+        return min(os.path.getctime(self.path), self.get_modification_time())
 
     def get_filesize(self):
         return os.path.getsize(self.get_url())
@@ -63,7 +77,7 @@ class Media(AbstractMedia):
         os.remove(self.get_url())
 
     def get_title(self):
-        return self.path[len(self.album.path) + 1:]
+        return self.path[len(self.album.get_url()) + 1:]
 
     def get_description(self):
         return self.path
@@ -86,3 +100,10 @@ class Media(AbstractMedia):
 
     def resize(self):
         pass
+
+    def update_blob(self, url):
+        self.path = url
+
+    def save(self):
+        if self.path != self.path_init:
+            shutil.copy(self.path, self.path_init)
