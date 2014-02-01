@@ -51,7 +51,7 @@ class AbstractMedia:
         pass
 
     @abstractmethod
-    def get_date(self):
+    def get_modification_time(self):
         """
         returns date
         """

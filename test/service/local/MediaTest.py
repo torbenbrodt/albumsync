@@ -47,7 +47,7 @@ class MediaTest(unittest.TestCase):
         time.sleep(0.1)
         Media.create(album_target, media_src)
         # datum should be transferred
-        self.assertEquals(time_ago, round(media_src.get_date(), 2))
+        self.assertEquals(time_ago, round(media_src.get_modification_time(), 2))
         self.assertIs(1, len(service.local.Media.Media.fetch_all(album_target)))
 
     def test_get_title(self):

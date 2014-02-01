@@ -9,19 +9,20 @@ from service.picasa.Album import Album
 
 
 class AlbumTest(unittest.TestCase):
-
     def setUp(self):
         parser = ConfigParser.ConfigParser()
         parser.read(os.path.join(os.path.expanduser('~'), "albumsync.ini"))
         Config.username = parser.get('credentials', 'username')
         Config.password = parser.get('credentials', 'password')
+        if Config.username != 'albumsync.test@gmail.com':
+            self.skipTest("The user setup in ~/albumsync.ini does not look like a test user"
+                          + ", don't run tests against production system.")
 
-    def test_fetchAll(self):
+    def test_fetch_all(self):
         for album in Album.fetch_all():
             print "\"", album.get_title(), "\" has", album.get_number_of_media(), "entries"
 
     def test_create(self):
-        self._addSkip("don't want to mess up during testing")
         length_old = len(Album.fetch_all())
         album_src = service.local.Album.Album(tempfile.mkdtemp() + '/a')
         album = Album.create(album_src)
@@ -29,7 +30,6 @@ class AlbumTest(unittest.TestCase):
         self.assertIsInstance(album, "Album")
 
     def test_delete(self):
-        self._addSkip("don't want to do dangerous stuff during testing, needs google account for unit testing only")
         length_old = len(Album.fetch_all())
         album_src = service.local.Album.Album(tempfile.mkdtemp() + '/a')
         album = Album.create(album_src)

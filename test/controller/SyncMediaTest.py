@@ -16,7 +16,7 @@ class SyncMediaTest(unittest.TestCase):
         # local config
         service.local.Config.Config.dir = tempfile.mkdtemp()
 
-    def test_files_same(self):
+    def test_run_from_local_to_local_files_same(self):
         # create local albums
         os.makedirs(service.local.Config.Config.dir + '/A')
         album_src = Album(service.local.Config.Config.dir + '/A')
@@ -34,8 +34,11 @@ class SyncMediaTest(unittest.TestCase):
         # compare
         self.assertTrue(sync.is_hash())
         self.assertTrue(sync.is_filesize_greater_than())
-        self.assertTrue(sync.is_date_greater_than())
+        self.assertTrue(sync.is_modification_time_greater_than())
         self.assertTrue(sync.is_dimensions_greater_than())
         self.assertFalse(sync.is_update_needed())
         # action
         self.run()
+
+    def test_run_from_local_to_picasa_files_same(self):
+        pass

@@ -6,7 +6,7 @@ class Album(AbstractAlbum):
 
     def __init__(self, path):
         """
-            @type path: string
-            @param path: absolute path
-            """
-        AbstractAlbum.__init__(self, path)
+        @type path: string
+        @param path: absolute path
+        """
+        pass

@@ -62,5 +62,9 @@ class AbstractAlbum:
         pass
 
     @abstractmethod
-    def get_date(self):
+    def get_modification_time(self):
+        """
+        timestamp of last modification
+        @rtype: float
+        """
         pass

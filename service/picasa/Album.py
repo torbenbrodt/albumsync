@@ -1,3 +1,4 @@
+import re
 from service.picasa.Client import Client
 from gdata.photos.service import *
 from service.abstract.AbstractAlbum import AbstractAlbum
@@ -37,12 +38,13 @@ class Album(AbstractAlbum):
             raise Exception('delete is not allowed')
         Client.get_client().Delete(self.web_ref)
 
-    def __init__(self, web_album, path):
+    def __init__(self, web_album):
         """
-        @type web_album: AlbumEntry
+        @type web_album: gdata.photos.UserFeed or url
         @param web_album: object from the gdata api
         """
-        super(Album, self).__init__(path)
+        if type(web_album) is str:
+            web_album = Client.get_client().GetFeed(web_album)
         self.web_ref = web_album
 
     def get_url(self):
@@ -69,3 +71,11 @@ class Album(AbstractAlbum):
         @rtype : int
         """
         return self.web_ref.numphotos.text
+
+    def get_modification_time(self):
+        """
+        timestamp of last modification
+        @rtype: float
+        """
+        return time.mktime(
+            time.strptime(re.sub("\.[0-9]{3}Z$", ".000 UTC", self.web_ref.updated.text), '%Y-%m-%dT%H:%M:%S.000 %Z'))

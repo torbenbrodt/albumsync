@@ -58,8 +58,7 @@ class Media(AbstractMedia):
             raise Exception('unsupported file extension')
         return Media(album, media)
 
-    def __init__(self, album, web_ref, path):
-        AbstractMedia.__init__(self, album, path)
+    def __init__(self, album, web_ref):
         self.album = album
         self.web_ref = web_ref
         self.local_url = ''
@@ -100,7 +99,7 @@ class Media(AbstractMedia):
         """
         return [int(self.web_ref.width.text), int(self.web_ref.height.text)]
 
-    def get_date(self):
+    def get_modification_time(self):
         return time.mktime(
             time.strptime(re.sub("\.[0-9]{3}Z$", ".000 UTC", self.web_ref.updated.text), '%Y-%m-%dT%H:%M:%S.000 %Z'))
 

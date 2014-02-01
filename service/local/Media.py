@@ -34,7 +34,7 @@ class Media(AbstractMedia):
         """
         path = os.path.join(album.get_url(), media_src.get_title())
         media_src.download(path)
-        os.utime(path, (media_src.get_date(), media_src.get_date()))
+        os.utime(path, (media_src.get_modification_time(), media_src.get_modification_time()))
         return Media(album, path)
 
     def __init__(self, album, path):
@@ -52,7 +52,7 @@ class Media(AbstractMedia):
     def get_hash(self):
         return Checksum.get_md5(self.get_url())
 
-    def get_date(self):
+    def get_modification_time(self):
         return os.path.getmtime(self.get_url())
 
     def get_filesize(self):

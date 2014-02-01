@@ -13,6 +13,7 @@ class Album(AbstractAlbum):
         """walk the directories
         @rtype : list of Album
         """
+        assert Config.dir, "Config.dir cannot be empty"
         entries = []
         for root, dirs, files in os.walk(Config.dir):
             for path in dirs:
@@ -30,6 +31,7 @@ class Album(AbstractAlbum):
         @param album_src: source album
         @rtype Album
         """
+        assert Config.dir, "Config.dir cannot be empty"
         path = Config.dir + '/' + urllib.quote(album_src.get_title())
         os.makedirs(path)
         return Album(path)
@@ -39,6 +41,7 @@ class Album(AbstractAlbum):
         @type path: string
         @param path: absolute path
         """
+        assert Config.dir, "Config.dir cannot be empty"
         self.path = path
 
     def get_url(self):
@@ -66,7 +69,7 @@ class Album(AbstractAlbum):
         """
         return self.get_title()
 
-    def get_date(self):
+    def get_modification_time(self):
         return os.path.getmtime(self.path)
 
     def delete(self):

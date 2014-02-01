@@ -40,9 +40,9 @@ class SyncMedia:
         logging.getLogger().debug('is target greater than ' + str(res))
         return res
 
-    def is_date_greater_than(self):
-        res = self.media_src.get_date() >= self.media_target.get_date()
-        logging.getLogger().debug('is date greater than ' + str(res))
+    def is_modification_time_greater_than(self):
+        res = self.media_src.get_modification_time() >= self.media_target.get_modification_time()
+        logging.getLogger().debug('is modification time greater than ' + str(res))
         return res
 
     def is_update_needed(self):
@@ -50,7 +50,7 @@ class SyncMedia:
             return True
         if not self.is_dimensions_greater_than():
             return True
-        if not self.is_date_greater_than():
+        if not self.is_modification_time_greater_than():
             return True
         return False
 

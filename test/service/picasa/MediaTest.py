@@ -14,18 +14,20 @@ class MediaTest(unittest.TestCase):
         parser.read(os.path.join(os.path.expanduser('~'), "albumsync.ini"))
         Config.username = parser.get('credentials', 'username')
         Config.password = parser.get('credentials', 'password')
+        if Config.username != 'albumsync.test@gmail.com':
+            self.skipTest("The user setup in ~/albumsync.ini does not look like a test user"
+                          + ", don't run tests against production system.")
 
     def test_fetch_all(self):
-        self._addSkip("needs google account for unit testing only")
         album = Album.fetch_all()[1]
         print album.get_title()
         for media in Media.fetch_all(album):
             print media.get_title()
 
     def test_get_hash(self):
-        self._addSkip("needs google account for unit testing only")
         # todo test1 with empty hash
         # todo test2 with hash written back
+        pass
 
 
 
