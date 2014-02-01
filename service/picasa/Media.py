@@ -56,14 +56,16 @@ class Media(AbstractMedia):
         metadata.checksum = gdata.photos.Checksum(text=media_src.get_hash())
 
         mime_type = media_src.get_mime_type()
+        media_url = media_src.get_local_url()
         if mime_type in Media.supportedImageFormats:
+            media_url = ImageHelper.resize(media_src.get_local_url(), Media.MAX_FREE_IMAGE_DIMENSION, Media.MAX_FREE_IMAGE_DIMENSION)
             media = Client.get_client().InsertPhoto(album.get_url(),
-                                                    metadata, media_src.get_local_url(), mime_type)
+                                                    metadata, media_url, mime_type)
         elif mime_type in Media.supportedVideoFormats:
             if media_src.get_filesize() > Media.MAX_VIDEO_SIZE:
-                raise Exception("Not uploading %s because it exceeds maximum file size" % media_src.get_url())
+                raise Exception("Not uploading %s because it exceeds maximum file size" % media_url)
             media = Client.get_client().InsertVideo(album.get_url(),
-                                                    metadata, media_src.get_local_url(), mime_type)
+                                                    metadata, media_url, mime_type)
         else:
             raise Exception('unsupported file extension')
         return Media(album, media)
