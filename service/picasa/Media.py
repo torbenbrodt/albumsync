@@ -11,6 +11,7 @@ from util.ImageHelper import ImageHelper
 from service.abstract.AbstractMedia import AbstractMedia
 from util.Superconfig import Superconfig
 from util.Deduplicator import Deduplicator
+from service.picasa import Album
 
 
 class Media(AbstractMedia):
@@ -43,23 +44,26 @@ class Media(AbstractMedia):
     @staticmethod
     def create(album, media_src):
         """
-        @param Album album:
+        @type album: Album
+        @param album:
         @type media_src: Media
         @param media_src:
         @return: Media
         """
-        mime_type = media_src.get_mime_type()
         metadata = gdata.photos.PhotoEntry()
         metadata.title = atom.Title(text=urllib.quote(media_src.get_title(), ''))
         metadata.summary = atom.Summary(text=media_src.get_description(), summary_type='text')
         metadata.checksum = gdata.photos.Checksum(text=media_src.get_hash())
+
+        mime_type = media_src.get_mime_type()
         if mime_type in Media.supportedImageFormats:
-            media = Client.get_client().InsertPhoto(album.webAlbum.albumUri,
+            media = Client.get_client().InsertPhoto(album.get_url(),
                                                     metadata, media_src.get_local_url(), mime_type)
         elif mime_type in Media.supportedVideoFormats:
             if media_src.get_filesize() > Media.MAX_VIDEO_SIZE:
                 raise Exception("Not uploading %s because it exceeds maximum file size" % media_src.get_url())
-            media = Client.get_client().InsertVideo(album.get_url(), metadata, media_src.get_local_url(), mime_type)
+            media = Client.get_client().InsertVideo(album.get_url(),
+                                                    metadata, media_src.get_local_url(), mime_type)
         else:
             raise Exception('unsupported file extension')
         return Media(album, media)
@@ -74,7 +78,9 @@ class Media(AbstractMedia):
     def save(self):
         # upload
         if 'blob' in self.changed:
-            self.web_ref = Client.get_client().UpdatePhotoBlob(self._get_edit_object().GetEditLink().href, self.get_local_url())
+            self.web_ref = Client.get_client().UpdatePhotoBlob(self.web_ref,
+                                                               self.local_url,
+                                                               self.get_mime_type())
 
         entry = Client.get_client().GetEntry(self._get_edit_object().GetEditLink().href)
 
@@ -104,6 +110,8 @@ class Media(AbstractMedia):
         return Client.get_client().GetFeed(url)
 
     def get_hash(self):
+        if not self.web_ref.checksum.text:
+            return ''
         return self.web_ref.checksum.text
 
     def get_filesize(self):
@@ -139,7 +147,7 @@ class Media(AbstractMedia):
 
     def get_description(self):
         """description"""
-        return self.web_ref.description.text
+        return self.web_ref.summary.text
 
     def get_url(self):
         return self.web_ref.content.src

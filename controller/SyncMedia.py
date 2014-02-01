@@ -118,5 +118,4 @@ class SyncMedia:
                 score = 1
         if score > 0:
             logging.getLogger().warn('target img will be updated, resulting score is ' + str(score))
-            #self.media_src.save()
-            pass
+            self.media_target.save()

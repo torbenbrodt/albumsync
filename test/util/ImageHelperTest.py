@@ -19,11 +19,11 @@ class ImageHelperTest(unittest.TestCase):
     def test_exif(self):
         path_src = os.path.dirname(os.path.abspath(__file__)) + '/../data/openartproject_city_limits.jpg'
         # copy image to temporary image
-        tmpfile = tempfile.NamedTemporaryFile(delete=False)
+        tmpfile = tempfile.NamedTemporaryFile(delete=False, suffix='.jpg')
         shutil.copy(path_src, tmpfile.name)
         path_src = tmpfile.name
         # copy image to temporary image
-        tmpfile = tempfile.NamedTemporaryFile(delete=False)
+        tmpfile = tempfile.NamedTemporaryFile(delete=False, suffix='.jpg')
         shutil.copy(path_src, tmpfile.name)
         path_target = tmpfile.name
         # write some exif data

@@ -27,9 +27,10 @@ class ImageHelper:
         if im.size[0] <= max_width and im.size[1] <= max_height:
             return return_path
 
-        resize_path = tempfile.NamedTemporaryFile(delete=False)
+        tempfile.gettempdir()
+        resize_path = tempfile.NamedTemporaryFile(delete=False, suffix='.' + im.format)
         im.thumbnail((max_width, max_height), Image.ANTIALIAS)
-        im.save(resize_path, 'JPEG')
+        im.save(resize_path, im.format)
         ImageHelper.copy_exif(path, resize_path.name)
         return resize_path.name
 

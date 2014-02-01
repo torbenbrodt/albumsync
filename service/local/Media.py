@@ -80,7 +80,7 @@ class Media(AbstractMedia):
         return self.path[len(self.album.get_url()) + 1:]
 
     def get_description(self):
-        return self.path
+        return ''
 
     def get_dimensions(self):
         return Image.open(self.path).size
