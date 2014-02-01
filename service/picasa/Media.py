@@ -49,7 +49,8 @@ class Media(AbstractMedia):
         metadata.summary = atom.Summary(text=media_src.get_description(), summary_type='text')
         metadata.checksum = gdata.photos.Checksum(text=media_src.get_hash())
         if mimeType in Media.supportedImageFormats:
-            media = Client.get_client().InsertPhoto(album.webAlbum.albumUri, metadata, media_src.get_local_url(), mimeType)
+            media = Client.get_client().InsertPhoto(album.webAlbum.albumUri,
+                                                    metadata, media_src.get_local_url(), mimeType)
         elif mimeType in Media.supportedVideoFormats:
             if media_src.get_filesize() > Media.MAX_VIDEO_SIZE:
                 raise Exception("Not uploading %s because it exceeds maximum file size" % media_src.get_url())
@@ -62,22 +63,32 @@ class Media(AbstractMedia):
         self.album = album
         self.web_ref = web_ref
         self.local_url = ''
+        self.changed = []
 
     def save(self):
+        # upload
+        if 'blob' in self.changed:
+            self.web_ref = Client.get_client().UpdatePhotoBlob(self._get_edit_object().GetEditLink().href, self.get_local_url())
+
         entry = Client.get_client().GetEntry(self._get_edit_object().GetEditLink().href)
 
         # checksum is not trustable, see http://code.google.com/p/gdata-issues/issues/detail?id=2351
-        hash = self.get_hash()
-        if not hash:
-            hash = Checksum.get_md5(self.get_local_url())
-        entry.checksum = gdata.photos.Checksum(text=hash)
+        media_hash = self.get_hash()
+        if 'blob' in self.changed or not media_hash:
+            media_hash = Checksum.get_md5(self.get_local_url())
+            entry.checksum = gdata.photos.Checksum(text=media_hash)
 
-        # todo more available attributes are updated, version, rights, summary
-        #entry.summary = atom.Summary(text=os.path.relpath(self.path,self.album.rootPath), summary_type='text')
+        if 'title' in self.changed:
+            entry.title = atom.Summary(text=self.get_title(), summary_type='text')
 
-        #It is important that you don't keep the old object around, once
-        #it has been updated. See http://code.google.com/apis/gdata/reference.html#Optimistic-concurrency
+        if 'description' in self.changed:
+            entry.summary = atom.Summary(text=self.get_description(), summary_type='text')
+
+        # It is important that you don't keep the old object around,
+        # once it has been updated. See http://code.google.com/apis/gdata/reference.html#Optimistic-concurrency
         self.web_ref = Client.get_client().UpdatePhotoMetadata(entry)
+        # reset changed attributes
+        self.changed = []
 
     def _get_edit_object(self):
         if not self.web_ref.gphoto_id.text:
@@ -121,7 +132,6 @@ class Media(AbstractMedia):
     def delete(self):
         if not Superconfig.allowdelete:
             raise Exception('delete is not allowed')
-        #todo is it possible to move to google picasa trash?
         Client.get_client().Delete(self._get_edit_object())
 
     def get_local_url(self):
@@ -145,15 +155,25 @@ class Media(AbstractMedia):
         return self.get_title()
 
     def is_resize_necessary(self):
-        #todo how to check album access against public
-        if self.album.web_ref.access == 'public':
+        if self.album.web_ref.access.text == 'public':
             return False
         width, height = self.get_dimensions()
         return width > self.MAX_FREE_IMAGE_DIMENSION or height > self.MAX_FREE_IMAGE_DIMENSION
 
     def resize(self):
-        ImageHelper.resize(self.get_local_url(), self.MAX_FREE_IMAGE_DIMENSION, self.MAX_FREE_IMAGE_DIMENSION)
-        # todo self.upload
+        """
+        call save() afterwards!
+        @return: result if image was changed
+        """
+        tmp = self.local_url
+        self.local_url = ImageHelper.resize(self.get_local_url(),
+                                            self.MAX_FREE_IMAGE_DIMENSION,
+                                            self.MAX_FREE_IMAGE_DIMENSION)
+        # check if the image changed
+        changed = tmp != self.local_url
+        if changed:
+            self.changed.append('blob')
+        return changed
 
     def __del__(self):
         # delete temporary local file if present
