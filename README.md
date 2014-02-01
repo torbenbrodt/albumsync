@@ -16,7 +16,8 @@ Needs gdata python library version 1
 
 Testing
 [![Build Status](https://travis-ci.org/torbenbrodt/albumsync.png)](https://travis-ci.org/torbenbrodt/albumsync)
- * Results can be found at https://travis-ci.org/torbenbrodt/albumsync
+* Tests should be run on an empty user
+* Results can be found at https://travis-ci.org/torbenbrodt/albumsync
 
 # Similar Projects
 https://github.com/leocrawford/picasawebsync

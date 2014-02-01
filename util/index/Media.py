@@ -34,11 +34,14 @@ class Media:
         for match_name, media in data_service.items():
             if match_name not in data_index:
                 data_index[media.get_match_name()] = {
-                    'indexed': media.get_date()
+                    'indexed': media.get_modification_time()
                 }
 
         fileref = open(self.path, 'w')
         json.dump(data_index, fileref)
+
+    def purge(self):
+        os.remove(self.path)
 
     def fetch_all(self):
         data = {}

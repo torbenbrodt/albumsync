@@ -1,4 +1,4 @@
 #!/usr/bin/python
-from controller import Front
+from controller.Front import Front
 
 Front.run()

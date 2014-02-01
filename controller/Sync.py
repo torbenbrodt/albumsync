@@ -7,6 +7,8 @@ class Sync:
     """Controller 1: uses services to compare albums."""
 
     def __init__(self, service_src, service_target):
+        assert service_src, "when using sync action, src cannot be empty"
+        assert service_target, "when using sync action, target cannot be empty"
         self.service_src = service_src
         self.service_target = service_target
 

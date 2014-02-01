@@ -33,11 +33,16 @@ class Album:
         for match_name, album in data_service.items():
             if match_name not in data_index:
                 data_index[album.get_match_name()] = {
-                    'indexed': album.get_date()
+                    'indexed': album.get_modification_time()
                 }
 
         fileref = open(self.path, 'w')
         json.dump(data_index, fileref)
+
+    def purge(self):
+        for album in self.fetch_all():
+            album.purge()
+        os.remove(self.path)
 
     def fetch_all(self):
         data = {}
