@@ -50,59 +50,53 @@ class Media(AbstractMedia):
         @param media_src:
         @return: Media
         """
-        metadata = gdata.photos.PhotoEntry()
-        metadata.title = atom.Title(text=urllib.quote(media_src.get_title(), ''))
-        metadata.summary = atom.Summary(text=media_src.get_description(), summary_type='text')
-        metadata.checksum = gdata.photos.Checksum(text=media_src.get_hash())
-
-        mime_type = media_src.get_mime_type()
-        media_url = media_src.get_local_url()
-        if mime_type in Media.supportedImageFormats:
-            media_url = ImageHelper.resize(media_src.get_local_url(), Media.MAX_FREE_IMAGE_DIMENSION, Media.MAX_FREE_IMAGE_DIMENSION)
-            media = Client.get_client().InsertPhoto(album.get_url(),
-                                                    metadata, media_url, mime_type)
-        elif mime_type in Media.supportedVideoFormats:
-            if media_src.get_filesize() > Media.MAX_VIDEO_SIZE:
-                raise Exception("Not uploading %s because it exceeds maximum file size" % media_url)
-            media = Client.get_client().InsertVideo(album.get_url(),
-                                                    metadata, media_url, mime_type)
-        else:
-            raise Exception('unsupported file extension')
-        return Media(album, media)
+        media_target = Media(album, None)
+        media_target.update_blob(media_src)
+        media_target.save()
+        return media_target
 
     def __init__(self, album, web_ref):
         self.album = album
         self.web_ref = web_ref
         self.title = ''
         self.local_url = ''
-        self.changed = []
 
     def save(self):
-        # upload
-        if 'blob' in self.changed:
-            self.web_ref = Client.get_client().UpdatePhotoBlob(self.web_ref,
-                                                               self.local_url,
-                                                               self.get_mime_type())
+        is_new = int(self.web_ref.gphoto_id.text) == 0
+        if is_new:
+            metadata = gdata.photos.PhotoEntry()
+        else:
+            metadata = Client.get_client().GetEntry(self.web_ref.GetEditLink().href)
+        metadata.title = atom.Title(text=self.get_title())
+        metadata.summary = atom.Summary(text=self.get_description(), summary_type='text')
+        metadata.checksum = gdata.photos.Checksum(text=self.get_hash())
 
-        entry = Client.get_client().GetEntry(self.web_ref.GetEditLink().href)
-
-        # checksum is not trustable, see http://code.google.com/p/gdata-issues/issues/detail?id=2351
-        media_hash = self.get_hash()
-        if 'blob' in self.changed or len(media_hash) != 32:
-            media_hash = Checksum.get_md5(self.get_local_url())
-            entry.checksum = gdata.photos.Checksum(text=media_hash)
-
-        if 'title' in self.changed:
-            entry.title = atom.Summary(text=self.get_title(), summary_type='text')
-
-        if 'description' in self.changed:
-            entry.summary = atom.Summary(text=self.get_description(), summary_type='text')
-
-        # It is important that you don't keep the old object around,
+        # It is important that you don't keep the old object around, so always keep an eye on web_ref
         # once it has been updated. See http://code.google.com/apis/gdata/reference.html#Optimistic-concurrency
-        self.web_ref = Client.get_client().UpdatePhotoMetadata(entry)
-        # reset changed attributes
-        self.changed = []
+        if self.get_mime_type() in Media.supportedImageFormats:
+            if is_new:
+                self.web_ref = Client.get_client().InsertPhoto(self.album.get_url(),
+                                                               metadata, self.get_local_url(), self.get_mime_type())
+            elif self.get_url():
+                self.web_ref = Client.get_client().UpdatePhotoMetadata(metadata)
+            else:
+                self.web_ref = Client.get_client().UpdatePhotoBlob(self.web_ref,
+                                                                   self.get_local_url(),
+                                                                   self.get_mime_type())
+        elif self.get_mime_type() in Media.supportedVideoFormats:
+            if self.get_filesize() > Media.MAX_VIDEO_SIZE:
+                raise Exception("Not uploading %s because it exceeds maximum file size" % self.get_local_url())
+            if is_new:
+                self.web_ref = Client.get_client().InsertVideo(self.album.get_url(),
+                                                               metadata, self.get_local_url(), self.get_mime_type())
+            elif self.get_url():
+                self.web_ref = Client.get_client().UpdatePhotoMetadata(metadata)
+            else:
+                self.web_ref = Client.get_client().UpdatePhotoBlob(self.web_ref,
+                                                                   self.get_local_url(),
+                                                                   self.get_mime_type())
+        else:
+            raise Exception('unsupported file extension %s' % self.get_mime_type())
 
     def get_hash(self):
         if not self.web_ref.checksum.text:
@@ -124,7 +118,7 @@ class Media(AbstractMedia):
         return [int(self.web_ref.width.text), int(self.web_ref.height.text)]
 
     def get_creation_time(self):
-        return time.mktime(time.localtime(int(self.web_ref.timestamp.text)/1000))
+        return time.mktime(time.localtime(int(self.web_ref.timestamp.text) / 1000))
 
     def get_modification_time(self):
         return time.mktime(
@@ -156,7 +150,6 @@ class Media(AbstractMedia):
         """this uses download"""
         if self.local_url:
             return self.local_url
-
         self.local_url = os.path.join(tempfile.gettempdir(), self.get_title())
         urllib.urlretrieve(self.get_url(), self.local_url)
         return self.local_url
@@ -178,9 +171,21 @@ class Media(AbstractMedia):
         width, height = self.get_dimensions()
         return width > self.MAX_FREE_IMAGE_DIMENSION or height > self.MAX_FREE_IMAGE_DIMENSION
 
-    def update_blob(self, url):
-        self.local_url = url
-        self.changed.append('blob')
+    def update_blob(self, media_src):
+        if not self.web_ref:
+            self.web_ref = object()
+            self.web_ref.gphoto_id = {'text': '0'}
+
+        self.web_ref.checksum = {'text': media_src.get_hash()}
+        self.web_ref.size = {'text': str(media_src.get_filesize())}
+        self.web_ref.title = {'text': media_src.get_title()}
+        self.web_ref.summary = {'text': media_src.get_description()}
+        self.web_ref.width = {'text': str(media_src.get_width())}
+        self.web_ref.height = {'text': str(media_src.get_height())}
+        self.web_ref.timestamp = {'text': media_src.get_creation_time()} #todo, date format
+        self.web_ref.updated = {'text': media_src.get_modification_time()} #todo, date format
+        # this is the indicator that the rawdata is new, see save() method
+        self.web_ref.content = {'src': media_src.get_url()}
 
     def resize(self):
         """
@@ -190,7 +195,10 @@ class Media(AbstractMedia):
                                      self.MAX_FREE_IMAGE_DIMENSION,
                                      self.MAX_FREE_IMAGE_DIMENSION)
         if self.get_local_url() != new_url:
-            self.update_blob(new_url)
+            self.local_url = new_url
+            self.web_ref.size = 0
+            self.web_ref.width = {'text': str(0)}
+            self.web_ref.height = {'text': str(0)}
             return True
         else:
             return False
@@ -198,6 +206,13 @@ class Media(AbstractMedia):
     def validate(self):
         """make this object valid
         """
+        if self.is_resize_necessary():
+            logging.getLogger().warn('resize was necessary, do resize')
+            self.resize()
+            # todo think self.save()
+
+        # checksum is not trustable, see http://code.google.com/p/gdata-issues/issues/detail?id=2351
         if len(self.get_hash()) != 32:
-            self.save()
-            logging.getLogger().warn('hash was invalid, updated to ' + self.get_hash())
+            logging.getLogger().warn('hash was invalid, do hash')
+            self.web_ref.checksum = {'text': Checksum.get_md5(self.get_local_url())}
+            # todo think self.save()
