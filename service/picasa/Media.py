@@ -84,7 +84,7 @@ class Media(AbstractMedia):
                                                                self.local_url,
                                                                self.get_mime_type())
 
-        entry = Client.get_client().GetEntry(self._get_edit_object().GetEditLink().href)
+        entry = Client.get_client().GetEntry(self.web_ref.GetEditLink().href)
 
         # checksum is not trustable, see http://code.google.com/p/gdata-issues/issues/detail?id=2351
         media_hash = self.get_hash()
@@ -103,13 +103,6 @@ class Media(AbstractMedia):
         self.web_ref = Client.get_client().UpdatePhotoMetadata(entry)
         # reset changed attributes
         self.changed = []
-
-    def _get_edit_object(self):
-        if not self.web_ref.gphoto_id.text:
-            raise Exception("missing gphoto_id")
-        url = '/data/feed/api/user/%s/albumid/%s/photoid/%s' % (
-            "default", self.web_ref.albumid.text, self.web_ref.gphoto_id.text)
-        return Client.get_client().GetFeed(url)
 
     def get_hash(self):
         if not self.web_ref.checksum.text:
@@ -157,7 +150,7 @@ class Media(AbstractMedia):
     def delete(self):
         if not Superconfig.allowdelete:
             raise Exception('delete is not allowed')
-        Client.get_client().Delete(self._get_edit_object())
+        Client.get_client().Delete(self.web_ref)
 
     def get_local_url(self):
         """this uses download"""
