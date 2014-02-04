@@ -3,7 +3,7 @@ import os
 import pyexiv2
 import shutil
 import time
-from PIL import Image
+from util.ImageHelper import ImageHelper
 from util.Checksum import Checksum
 from service.abstract.AbstractMedia import AbstractMedia
 from util.Superconfig import Superconfig
@@ -27,7 +27,6 @@ class Media(AbstractMedia):
     @staticmethod
     def create(album, media_src):
         """
-
         @param album:
         @param media_src:
         @rtype media_src: AbstractMedia
@@ -83,7 +82,7 @@ class Media(AbstractMedia):
         return ''
 
     def get_dimensions(self):
-        return Image.open(self.path).size
+        return ImageHelper.get_size(self.path)
 
     def get_mime_type(self):
         return mimetypes.guess_type(self.path)[0]
@@ -101,8 +100,8 @@ class Media(AbstractMedia):
     def resize(self):
         pass
 
-    def update_blob(self, url):
-        self.path = url
+    def update_blob(self, media_src):
+        self.path = media_src.get_local_url()
 
     def save(self):
         if self.path != self.path_init:

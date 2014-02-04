@@ -72,3 +72,11 @@ class AbstractAlbum:
         @rtype: float
         """
         pass
+
+    @abstractmethod
+    def get_creation_time(self):
+        """
+        timestamp of last creation
+        @rtype: float
+        """
+        pass

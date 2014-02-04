@@ -27,6 +27,7 @@ class Album(AbstractAlbum):
         @param album_src: source album
         @rtype Album
         """
+        # todo meta_timestamp = gdata.photos.Timestamp(text=album_src.get_creation_time() * 1000)
         web_album = Client.get_client().InsertAlbum(title=album_src.get_title(), access='private',
                                                     summary='synced from https://github.com/torbenbrodt/albumsync')
         return Album(web_album)
@@ -87,3 +88,6 @@ class Album(AbstractAlbum):
         """
         return time.mktime(
             time.strptime(re.sub("\.[0-9]{3}Z$", ".000 UTC", self.web_ref.updated.text), '%Y-%m-%dT%H:%M:%S.000 %Z'))
+
+    def get_creation_time(self):
+        return time.mktime(time.localtime(int(self.web_ref.timestamp.text) / 1000))

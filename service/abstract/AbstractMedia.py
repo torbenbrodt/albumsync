@@ -142,7 +142,7 @@ class AbstractMedia:
         pass
 
     @abstractmethod
-    def update_blob(self, url):
+    def update_blob(self, media_src):
         pass
 
     @abstractmethod

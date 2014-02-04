@@ -4,3 +4,4 @@ class Config:
 
     username = ""
     password = ""
+    noresize = False

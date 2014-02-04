@@ -9,6 +9,10 @@ class ImageHelper:
         pass
 
     @staticmethod
+    def get_size(path):
+        return Image.open(path).size
+
+    @staticmethod
     def copy_exif(from_path, to_path):
         metadata_src = pyexiv2.ImageMetadata(from_path)
         metadata_src.read()

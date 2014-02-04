@@ -1,28 +1,25 @@
+import calendar
 import logging
 import mimetypes
 import tempfile
 import urllib
 import re
 import shutil
+from datetime import datetime
 from service.picasa.Client import Client
 from gdata.photos.service import *
+from util.Mediatype import Mediatype
 from util.Checksum import Checksum
 from util.ImageHelper import ImageHelper
 from service.abstract.AbstractMedia import AbstractMedia
 from util.Superconfig import Superconfig
 from util.Deduplicator import Deduplicator
-from service.picasa import Album
+from util.Duck import Duck
+from service.picasa.Config import Config
 
 
 class Media(AbstractMedia):
     """Model: common public api for all medias like photos and videos"""
-
-    MAX_VIDEO_SIZE = 1073741824
-    MAX_FREE_IMAGE_DIMENSION = 2048
-    supportedImageFormats = frozenset(["image/bmp", "image/gif", "image/jpeg", "image/png"])
-    supportedVideoFormats = frozenset(
-        ["video/3gpp", "video/avi", "video/quicktime", "video/mp4", "video/mpeg", "video/mpeg4", "video/msvideo",
-         "video/x-ms-asf", "video/x-ms-wmv", "video/x-msvideo"])
 
     @staticmethod
     def fetch_all(album):
@@ -52,16 +49,19 @@ class Media(AbstractMedia):
         """
         media_target = Media(album, None)
         media_target.update_blob(media_src)
+        # this includes resizing
+        media_target.validate()
         media_target.save()
         return media_target
 
+    # noinspection PyMissingConstructor
     def __init__(self, album, web_ref):
         self.album = album
         self.web_ref = web_ref
         self.title = ''
         self.local_url = ''
 
-    def save(self):
+    def _get_meta_data(self):
         is_new = int(self.web_ref.gphoto_id.text) == 0
         if is_new:
             metadata = gdata.photos.PhotoEntry()
@@ -69,34 +69,43 @@ class Media(AbstractMedia):
             metadata = Client.get_client().GetEntry(self.web_ref.GetEditLink().href)
         metadata.title = atom.Title(text=self.get_title())
         metadata.summary = atom.Summary(text=self.get_description(), summary_type='text')
-        metadata.checksum = gdata.photos.Checksum(text=self.get_hash())
+        if self.get_hash():
+            metadata.checksum = gdata.photos.Checksum(text=self.get_hash())
+        else:
+            metadata.checksum = gdata.photos.Checksum(text=Checksum.get_md5(self.get_local_url()))
+        #metadata.timestamp = gdata.photos.Timestamp(text=self.get_creation_time() * 1000)
+        return metadata
+
+    def save(self):
+        is_new = int(self.web_ref.gphoto_id.text) == 0
 
         # It is important that you don't keep the old object around, so always keep an eye on web_ref
         # once it has been updated. See http://code.google.com/apis/gdata/reference.html#Optimistic-concurrency
-        if self.get_mime_type() in Media.supportedImageFormats:
+        media_type = Mediatype()
+        if media_type.is_image(self.get_mime_type()):
             if is_new:
-                self.web_ref = Client.get_client().InsertPhoto(self.album.get_url(),
-                                                               metadata, self.get_local_url(), self.get_mime_type())
-            elif self.get_url():
-                self.web_ref = Client.get_client().UpdatePhotoMetadata(metadata)
-            else:
-                self.web_ref = Client.get_client().UpdatePhotoBlob(self.web_ref,
-                                                                   self.get_local_url(),
-                                                                   self.get_mime_type())
-        elif self.get_mime_type() in Media.supportedVideoFormats:
-            if self.get_filesize() > Media.MAX_VIDEO_SIZE:
-                raise Exception("Not uploading %s because it exceeds maximum file size" % self.get_local_url())
+                self.web_ref = Client.get_client().InsertPhoto(self.album.get_url(), self._get_meta_data(),
+                                                               self.get_local_url(), self.get_mime_type())
+        elif media_type.is_video(self.get_mime_type()):
             if is_new:
-                self.web_ref = Client.get_client().InsertVideo(self.album.get_url(),
-                                                               metadata, self.get_local_url(), self.get_mime_type())
-            elif self.get_url():
-                self.web_ref = Client.get_client().UpdatePhotoMetadata(metadata)
-            else:
-                self.web_ref = Client.get_client().UpdatePhotoBlob(self.web_ref,
-                                                                   self.get_local_url(),
-                                                                   self.get_mime_type())
+                if self.get_filesize() > Client.MAX_VIDEO_SIZE:
+                    raise Exception("Not uploading %s because it exceeds maximum file size" % self.get_local_url())
+                self.web_ref = Client.get_client().InsertVideo(self.album.get_url(), self._get_meta_data(),
+                                                               self.get_local_url(), self.get_mime_type())
+            elif not self.get_url():
+                if self.get_filesize() > Client.MAX_VIDEO_SIZE:
+                    raise Exception("Not uploading %s because it exceeds maximum file size" % self.get_local_url())
         else:
             raise Exception('unsupported file extension %s' % self.get_mime_type())
+
+        # new entries already have meta data
+        if not is_new:
+            # updating blob, will delete checksum, so order is important
+            if not self.get_url():
+                self.web_ref = Client.get_client().UpdatePhotoBlob(self.web_ref,
+                                                                   self.get_local_url(),
+                                                                   self.get_mime_type())
+            self.web_ref = Client.get_client().UpdatePhotoMetadata(self._get_meta_data())
 
     def get_hash(self):
         if not self.web_ref.checksum.text:
@@ -105,11 +114,11 @@ class Media(AbstractMedia):
 
     def get_filesize(self):
         """in bytes"""
-        bytes = int(self.web_ref.size.text)
+        size_bytes = int(self.web_ref.size.text)
         # when we download picasa images they are equal
         # when we upload and download images they are 218 bytes bigger
-        bytes -= 218
-        return bytes
+        size_bytes -= 218
+        return size_bytes
 
     def get_dimensions(self):
         """
@@ -121,8 +130,10 @@ class Media(AbstractMedia):
         return time.mktime(time.localtime(int(self.web_ref.timestamp.text) / 1000))
 
     def get_modification_time(self):
-        return time.mktime(
-            time.strptime(re.sub("\.[0-9]{3}Z$", ".000 UTC", self.web_ref.updated.text), '%Y-%m-%dT%H:%M:%S.000 %Z'))
+        # The UTC time zone is sometimes denoted by the letter Z
+        # time.mktime assumes the time is in localtime, but calendar.timegm takes utc
+        return calendar.timegm(
+            time.strptime(re.sub("\.([0-9]{3})Z$", ".\\1 UTC", self.web_ref.updated.text), '%Y-%m-%dT%H:%M:%S.%f %Z'))
 
     def set_title(self, title):
         self.title = title
@@ -166,39 +177,47 @@ class Media(AbstractMedia):
         return self.get_title()
 
     def is_resize_necessary(self):
+        if Config.noresize:
+            return False
         if self.album.web_ref.access.text == 'public':
             return False
         width, height = self.get_dimensions()
-        return width > self.MAX_FREE_IMAGE_DIMENSION or height > self.MAX_FREE_IMAGE_DIMENSION
+        return width > Client.MAX_FREE_IMAGE_DIMENSION or height > Client.MAX_FREE_IMAGE_DIMENSION
 
     def update_blob(self, media_src):
-        if not self.web_ref:
-            self.web_ref = object()
-            self.web_ref.gphoto_id = {'text': '0'}
+        self.local_url = media_src.get_url()
 
-        self.web_ref.checksum = {'text': media_src.get_hash()}
-        self.web_ref.size = {'text': str(media_src.get_filesize())}
-        self.web_ref.title = {'text': media_src.get_title()}
-        self.web_ref.summary = {'text': media_src.get_description()}
-        self.web_ref.width = {'text': str(media_src.get_width())}
-        self.web_ref.height = {'text': str(media_src.get_height())}
-        self.web_ref.timestamp = {'text': media_src.get_creation_time()} #todo, date format
-        self.web_ref.updated = {'text': media_src.get_modification_time()} #todo, date format
-        # this is the indicator that the rawdata is new, see save() method
-        self.web_ref.content = {'src': media_src.get_url()}
+        if not self.web_ref:
+            self.web_ref = Duck.create()
+            self.web_ref.gphoto_id = Duck.create({'text': '0'})
+
+        width, height = media_src.get_dimensions()
+        self.web_ref.checksum = Duck.create({'text': media_src.get_hash()})
+        self.web_ref.size = Duck.create({'text': str(media_src.get_filesize())})
+        self.web_ref.title = Duck.create({'text': media_src.get_title()})
+        self.web_ref.summary = Duck.create({'text': media_src.get_description()})
+        self.web_ref.width = Duck.create({'text': str(width)})
+        self.web_ref.height = Duck.create({'text': str(height)})
+        self.web_ref.timestamp = Duck.create({'text': media_src.get_creation_time() * 1000})
+        self.web_ref.updated = Duck.create(
+            {'text': datetime.fromtimestamp(media_src.get_modification_time()).isoformat() + 'Z'})
+        # leave this empty, as the indicator that the rawdata is new, see save() method
+        self.web_ref.content = Duck.create({'src': ''})
 
     def resize(self):
         """
         @return: result if image was changed
         """
         new_url = ImageHelper.resize(self.get_local_url(),
-                                     self.MAX_FREE_IMAGE_DIMENSION,
-                                     self.MAX_FREE_IMAGE_DIMENSION)
+                                     Client.MAX_FREE_IMAGE_DIMENSION,
+                                     Client.MAX_FREE_IMAGE_DIMENSION)
         if self.get_local_url() != new_url:
             self.local_url = new_url
-            self.web_ref.size = 0
-            self.web_ref.width = {'text': str(0)}
-            self.web_ref.height = {'text': str(0)}
+            width, height = ImageHelper.get_size(new_url)
+            self.web_ref.width = Duck.create({'text': str(width)})
+            self.web_ref.height = Duck.create({'text': str(height)})
+            # leave this empty, as the indicator that the rawdata is new, see save() method
+            self.web_ref.content = Duck.create({'src': ''})
             return True
         else:
             return False
@@ -206,13 +225,15 @@ class Media(AbstractMedia):
     def validate(self):
         """make this object valid
         """
+        changed = False
         if self.is_resize_necessary():
+            changed = True
             logging.getLogger().warn('resize was necessary, do resize')
             self.resize()
-            # todo think self.save()
 
         # checksum is not trustable, see http://code.google.com/p/gdata-issues/issues/detail?id=2351
         if len(self.get_hash()) != 32:
+            changed = True
             logging.getLogger().warn('hash was invalid, do hash')
-            self.web_ref.checksum = {'text': Checksum.get_md5(self.get_local_url())}
-            # todo think self.save()
+
+        return changed

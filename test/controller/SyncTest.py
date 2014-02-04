@@ -43,5 +43,5 @@ class SyncTest(unittest.TestCase):
             self.skipTest("The user setup in ~/albumsync.ini does not look like a test user"
                           + ", don't run tests against production system.")
         # create some remote albums
-        sync = Sync('local', 'picasa')
+        sync = Sync('local', 'picasa', '/home/tb/Pictures/2013/03 Ostern')
         sync.run()

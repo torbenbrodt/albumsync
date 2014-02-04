@@ -23,6 +23,7 @@ class Front:
 
         parser.add_argument('--service_picasa_username', help='Your picasa username', metavar='user@gmail.com')
         parser.add_argument('--service_picasa_password', help='Your picasa password', metavar='***')
+        parser.add_argument('--service_picasa_noresize', help='Skip resizeing', action='store_true')
         parser.add_argument('--service_local_dir', help='Directory where local images are stored', metavar='~/Pictures')
         parser.add_argument('--album', help='Limit action to single album')
 
@@ -51,6 +52,9 @@ class Front:
         if args.service_picasa_username:
             import service.picasa.Config
             service.picasa.Config.Config.username = args.service_picasa_username
+        if args.service_picasa_noresize:
+            import service.picasa.Config
+            service.picasa.Config.Config.noresize = args.service_picasa_noresize
         if args.service_picasa_password:
             import service.picasa.Config
             service.picasa.Config.Config.password = args.service_picasa_password

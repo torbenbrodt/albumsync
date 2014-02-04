@@ -78,6 +78,9 @@ class Album(AbstractAlbum):
     def get_modification_time(self):
         return os.path.getmtime(self.path)
 
+    def get_creation_time(self):
+        return self.get_modification_time()
+
     def delete(self):
         if not Superconfig.allowdelete:
             raise Exception('delete is not allowed')
