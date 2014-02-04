@@ -22,8 +22,9 @@ class SyncAlbum:
         for media_src in index.fetch_all_deleted():
             if media_src.get_match_name() in medias_targets_dict:
                 logging.getLogger().debug('-- ' + media_src.get_match_name() + ' -- index, will delete media')
-                media_target = medias_targets_dict[media_src.get_match_name()]
-                media_target.delete()
+                medias_targets_dict[media_src.get_match_name()].delete()
+                # remove from dictionary
+                del medias_targets_dict[media_src.get_match_name()]
             else:
                 logging.getLogger().debug('-- ' + media_src.get_match_name() + ' -- index, will skip media')
 

@@ -28,8 +28,9 @@ class Sync:
             for album_src in index.fetch_all_deleted():
                 if album_src.get_match_name() in albums_targets_dict:
                     logging.getLogger().debug('-- ' + album_src.get_match_name() + ' -- index, will delete album')
-                    media_target = albums_targets_dict[album_src.get_match_name()]
-                    media_target.delete()
+                    albums_targets_dict[album_src.get_match_name()].delete()
+                    # remove from dictionary
+                    del albums_targets_dict[album_src.get_match_name()]
                 else:
                     logging.getLogger().debug('-- ' + album_src.get_match_name() + ' -- index, will skip album')
             album_src_list = self.service_src.Album.Album.fetch_all()
