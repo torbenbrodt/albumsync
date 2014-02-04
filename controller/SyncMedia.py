@@ -71,8 +71,14 @@ class SyncMedia:
         # if modification of picasa data is newer than
         # modification of picasa can be date of upload
         if self._cmp_modification_time() > 0:
-            logging.getLogger().debug('modification time of source item is newer')
-            score += 1
+            if self.media_src.get_creation_time() == self.media_target.get_modification_time():
+                logging.getLogger().debug('modification time of source is newer, but '
+                                          'but creation time of source item equals modification time of target'
+                                          'and this is good')
+            else:
+                logging.getLogger().debug('modification time of source is newer')
+                score += 1
+
             if self._cmp_dimensions() < 0:
                 logging.getLogger().debug('dimensions are smaller, skip')
                 score -= 1

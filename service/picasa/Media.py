@@ -62,35 +62,44 @@ class Media(AbstractMedia):
         self.local_url = ''
 
     def _get_meta_data(self):
+        dic = {}
+        dic['title'] = atom.Title(text=self.get_title())
+        dic['summary'] = atom.Summary(text=self.get_description(), summary_type='text')
+        if self.get_hash():
+            dic['checksum'] = gdata.photos.Checksum(text=self.get_hash())
+        else:
+            dic['checksum'] = gdata.photos.Checksum(text=Checksum.get_md5(self.get_local_url()))
+        dic['timestamp'] = gdata.photos.Timestamp(text=str(int(self.get_creation_time() * 1000)))
+        return dic
+
+    def _bild_entry(self, meta_data_data):
         is_new = int(self.web_ref.gphoto_id.text) == 0
         if is_new:
             metadata = gdata.photos.PhotoEntry()
         else:
             metadata = Client.get_client().GetEntry(self.web_ref.GetEditLink().href)
-        metadata.title = atom.Title(text=self.get_title())
-        metadata.summary = atom.Summary(text=self.get_description(), summary_type='text')
-        if self.get_hash():
-            metadata.checksum = gdata.photos.Checksum(text=self.get_hash())
-        else:
-            metadata.checksum = gdata.photos.Checksum(text=Checksum.get_md5(self.get_local_url()))
-        metadata.timestamp = gdata.photos.Timestamp(text=str(int(self.get_creation_time() * 1000)))
+        for k, v in meta_data_data.items():
+            setattr(metadata, k, v)
         return metadata
 
     def save(self):
         is_new = int(self.web_ref.gphoto_id.text) == 0
+        meta_data_data = self._get_meta_data()
 
         # It is important that you don't keep the old object around, so always keep an eye on web_ref
         # once it has been updated. See http://code.google.com/apis/gdata/reference.html#Optimistic-concurrency
         media_type = Mediatype()
         if media_type.is_image(self.get_mime_type()):
             if is_new:
-                self.web_ref = Client.get_client().InsertPhoto(self.album.get_url(), self._get_meta_data(),
+                self.web_ref = Client.get_client().InsertPhoto(self.album.get_url(),
+                                                               self._bild_entry(meta_data_data),
                                                                self.get_local_url(), self.get_mime_type())
         elif media_type.is_video(self.get_mime_type()):
             if is_new:
                 if self.get_filesize() > Client.MAX_VIDEO_SIZE:
                     raise Exception("Not uploading %s because it exceeds maximum file size" % self.get_local_url())
-                self.web_ref = Client.get_client().InsertVideo(self.album.get_url(), self._get_meta_data(),
+                self.web_ref = Client.get_client().InsertPhoto(self.album.get_url(),
+                                                               self._bild_entry(meta_data_data),
                                                                self.get_local_url(), self.get_mime_type())
             elif not self.get_url():
                 if self.get_filesize() > Client.MAX_VIDEO_SIZE:
@@ -105,7 +114,10 @@ class Media(AbstractMedia):
                 self.web_ref = Client.get_client().UpdatePhotoBlob(self.web_ref,
                                                                    self.get_local_url(),
                                                                    self.get_mime_type())
-            self.web_ref = Client.get_client().UpdatePhotoMetadata(self._get_meta_data())
+
+        # InsertPhoto does not handle timestamp, so we need to update it again
+        if self.web_ref.timestamp.text != meta_data_data['timestamp'].text:
+            self.web_ref = Client.get_client().UpdatePhotoMetadata(self._bild_entry(meta_data_data))
 
     def get_hash(self):
         if not self.web_ref.checksum.text:

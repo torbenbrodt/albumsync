@@ -1,6 +1,7 @@
 from PIL import Image
 import pyexiv2
 import tempfile
+import time
 
 
 class ImageHelper:
@@ -10,7 +11,24 @@ class ImageHelper:
 
     @staticmethod
     def get_size(path):
-        return Image.open(path).size
+        try:
+            size = Image.open(path).size
+        except IOError:
+            # if this is not an image, we cannot get the size
+            size = [0, 0]
+        return size
+
+    @staticmethod
+    def get_exif_creation_time(path):
+        try:
+            metadata = pyexiv2.ImageMetadata(path)
+            metadata.read()
+        except IOError:
+            # if this is not an image, we cannot get the size
+            return 0
+        if 'Exif.Photo.DateTimeOriginal' in metadata.exif_keys:
+            return time.mktime(metadata['Exif.Photo.DateTimeOriginal'].value.timetuple())
+        return 0
 
     @staticmethod
     def copy_exif(from_path, to_path):

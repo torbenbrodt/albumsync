@@ -1,8 +1,6 @@
 import mimetypes
 import os
-import pyexiv2
 import shutil
-import time
 from util.ImageHelper import ImageHelper
 from util.Checksum import Checksum
 from service.abstract.AbstractMedia import AbstractMedia
@@ -63,11 +61,9 @@ class Media(AbstractMedia):
         return os.path.getmtime(self.get_url())
 
     def get_creation_time(self):
-        metadata = pyexiv2.ImageMetadata(self.path)
-        metadata.read()
-        # 10h difference for 2001/01 Australien
-        if 'Exif.Photo.DateTimeOriginal' in metadata.exif_keys:
-            return time.mktime(metadata['Exif.Photo.DateTimeOriginal'].value.timetuple())
+        exif_creation_time = ImageHelper.get_exif_creation_time(self.path)
+        if exif_creation_time:
+            return exif_creation_time
         return min(os.path.getctime(self.path), self.get_modification_time())
 
     def get_filesize(self):
