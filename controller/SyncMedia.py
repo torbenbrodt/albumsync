@@ -67,20 +67,22 @@ class SyncMedia:
     def get_score(self):
         score = 0
 
-        # modification of local data is trustable
+        # if modification of local data is newer than picasa, this is trustable
+        # if modification of picasa data is newer than
         # modification of picasa can be date of upload
         if self._cmp_modification_time() > 0:
             logging.getLogger().debug('modification time of source item is newer')
             score += 1
-            if self._cmp_dimensions() > 0:
-                logging.getLogger().debug('dimensions are also bigger')
-                score += 1
+            if self._cmp_dimensions() < 0:
+                logging.getLogger().debug('dimensions are smaller, skip')
+                score -= 1
 
         if self._cmp_creation_time() != 0 and self._cmp_hash() != 0:
             logging.getLogger().debug('creation time and hash are different, this is probably not the same image')
             score = 0
 
-        return score
+        # todo comparison currently is not safe, changes in picasa are not properly detected
+        return 0
 
     def run(self):
         # before comparing ensure, that objects are valid

@@ -19,8 +19,11 @@ class Media(AbstractMedia):
         """
         entries = []
         for path in os.listdir(album.get_url()):
+            # skip hidden files
+            if path[0] == '.':
+                continue
             media_path = os.path.join(album.get_url(), path)
-            if os.path.isfile(media_path):
+            if os.path.isfile(media_path) or media_path:
                 entries.append(Media(album, media_path))
         return entries
 

@@ -27,8 +27,8 @@ class Album(AbstractAlbum):
         @param album_src: source album
         @rtype Album
         """
-        # todo meta_timestamp = gdata.photos.Timestamp(text=album_src.get_creation_time() * 1000)
         web_album = Client.get_client().InsertAlbum(title=album_src.get_title(), access='private',
+                                                    timestamp='%i' % int(album_src.get_creation_time() * 1000),
                                                     summary='synced from https://github.com/torbenbrodt/albumsync')
         return Album(web_album)
 

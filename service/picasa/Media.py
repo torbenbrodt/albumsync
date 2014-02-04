@@ -73,7 +73,7 @@ class Media(AbstractMedia):
             metadata.checksum = gdata.photos.Checksum(text=self.get_hash())
         else:
             metadata.checksum = gdata.photos.Checksum(text=Checksum.get_md5(self.get_local_url()))
-        #metadata.timestamp = gdata.photos.Timestamp(text=self.get_creation_time() * 1000)
+        metadata.timestamp = gdata.photos.Timestamp(text=str(int(self.get_creation_time() * 1000)))
         return metadata
 
     def save(self):
@@ -198,7 +198,8 @@ class Media(AbstractMedia):
         self.web_ref.summary = Duck.create({'text': media_src.get_description()})
         self.web_ref.width = Duck.create({'text': str(width)})
         self.web_ref.height = Duck.create({'text': str(height)})
-        self.web_ref.timestamp = Duck.create({'text': media_src.get_creation_time() * 1000})
+        # timestamp will hold the reference of the last modification time of source item
+        self.web_ref.timestamp = Duck.create({'text': media_src.get_modification_time() * 1000})
         self.web_ref.updated = Duck.create(
             {'text': datetime.fromtimestamp(media_src.get_modification_time()).isoformat() + 'Z'})
         # leave this empty, as the indicator that the rawdata is new, see save() method
