@@ -13,78 +13,93 @@ class Album:
         @rtype service:
         """
         self.service = service
+        self.path = ''
+        self.index = {}
+        self.synced = False
+        if util.index.Config.Config.dir:
+            self._load_index_from_file()
+
+    def _load_index_from_file(self):
         self.path = os.path.join(util.index.Config.Config.dir, self.service.__name__ + '.index')
-
-    def update(self):
-        # skip if there is no directory to be indexed
-        if not util.index.Config.Config.dir:
-            return
-
-        # read existing index
-        index = self.fetch()
-
-        # todo implement ttl
-        # check ttl
-        if not util.index.Config.Config.ttl or index.last_update - time > util.index.Config.Config.ttl:
-            return
-
-        index_entry = index['entry']
-
-        # read media from service
-        data_service = dict((album_target.get_match_name(), album_target) for album_target in self.service.Album.Album.fetch_all())
-
-        # check existing data for deletion
-        for match_name, album in index_entry.items():
-            if match_name not in data_service:
-                index_entry[match_name]['deleted'] = time.time()
-            elif 'deleted' in album and album['deleted']:
-                index_entry[match_name].pop('deleted')
-
-        for match_name, album in data_service.items():
-            if match_name not in index_entry:
-                index_entry[album.get_match_name()] = {
-                    'indexed': album.get_modification_time()
-                }
-
-        fileref = open(self.path, 'w')
-        index = {'last_update': 0, 'entry': index_entry}
-        json.dump(index, fileref)
-
-    def purge(self):
-        for album in self.fetch_all():
-            album.purge()
-        os.remove(self.path)
-
-    def fetch_all(self):
-        data = self.fetch()
-        if 'entry' in data:
-            return data['entry']
-        else:
-            return {}
-
-    def fetch(self):
-        if not util.index.Config.Config.dir:
-            return {}
-        data = {}
         try:
             # create dirs
             dirs = os.path.split(self.path)[0]
             if not os.path.exists(dirs):
                 os.makedirs(dirs)
-            # load json content
+                # load json content
             if os.path.exists(self.path):
                 fileref = open(self.path, 'r')
-                data = json.load(fileref)
+                self.index = json.load(fileref)
         except Exception as e:
             # todo add logger
             pass
-        return data
+
+    def sync(self, force=False):
+        if not force and self.synced:
+            return
+
+        if not util.index.Config.Config.dir:
+            return
+
+        if util.index.Config.Config.ttl and 'last_update' in self.index and \
+                util.index.Config.Config.ttl > time.time() - int(self.index['last_update']):
+            return
+
+        self.synced = True
+
+        # read media from service
+        data_service = dict(
+            (album_target.get_match_name(), album_target) for album_target in self.service.Album.Album.fetch_all())
+
+        if 'entry' not in self.index:
+            self.index['entry'] = {}
+
+        # check existing data for deletion
+        for match_name, album in self.index['entry'].items():
+            if match_name not in data_service:
+                self.index['entry'][match_name]['deleted'] = time.time()
+            elif 'deleted' in album and album['deleted']:
+                self.index['entry'][match_name].pop('deleted')
+
+        for match_name, album in data_service.items():
+            if match_name not in self.index['entry']:
+                self.index['entry'][album.get_match_name()] = {
+                    'indexed': album.get_modification_time()
+                }
+
+    def write(self):
+        """write index"""
+        self.sync()
+        self.index['last_update'] = time.time()
+        fileref = open(self.path, 'w')
+        json.dump(self.index, fileref)
+
+    def purge(self):
+        """remove index"""
+        self.sync()
+        if 'entry' not in self.index:
+            return
+        for album in self.index['entry']:
+            album.purge()
+        os.remove(self.path)
 
     def fetch_all_as_album(self):
+        """return album objects"""
+        if 'entry' not in self.index:
+            return []
         albums = []
-        for match_name in self.fetch_all():
+        for match_name in self.index['entry']:
             albums.append(self.service.Album(match_name))
         return albums
 
+    def fetch_all(self):
+        """return albums in index"""
+        if 'entry' not in self.index:
+            return {}
+        return self.index['entry']
+
     def fetch_all_deleted(self):
-        return {k: v for k, v in self.fetch_all().items() if 'deleted' in v and v['deleted']}
+        """return albums which were deleted"""
+        if 'entry' not in self.index:
+            return {}
+        return {k: v for k, v in self.index['entry'].items() if 'deleted' in v and v['deleted']}

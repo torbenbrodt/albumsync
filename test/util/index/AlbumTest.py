@@ -31,19 +31,19 @@ class AlbumTest(unittest.TestCase):
         self.assertEquals(0, len(index.fetch_all()))
         self.assertEquals(0, len(index.fetch_all_deleted()))
         # check after indexing
-        index.update()
+        index.sync(True)
         self.assertEquals(3, len(index.fetch_all()))
         self.assertEquals(0, len(index.fetch_all_deleted()))
         # remove folders
         shutil.rmtree(service.local.Config.Config.dir + '/albumA')
         shutil.rmtree(service.local.Config.Config.dir + '/albumB')
         # update index again
-        index.update()
+        index.sync(True)
         self.assertEquals(3, len(index.fetch_all()))
         self.assertEquals(2, len(index.fetch_all_deleted()))
         # now insert one of the files again
         os.makedirs(service.local.Config.Config.dir + '/albumA')
         open(service.local.Config.Config.dir + '/albumA/fileA.jpg', 'a').close()
-        index.update()
+        index.sync(True)
         self.assertEquals(3, len(index.fetch_all()))
         self.assertEquals(1, len(index.fetch_all_deleted()))

@@ -20,7 +20,7 @@ class Sync:
         if (service == self.service_src and util.Superconfig.Superconfig.from_index_src) or (
                 self.service_target == service and util.Superconfig.Superconfig.from_index_target):
             index = util.index.Album.Album(service)
-            index.update()
+            index.sync()
             return index.fetch_all_as_album()
         else:
             return service.Album.Album.fetch_all()
@@ -35,7 +35,7 @@ class Sync:
         else:
             # check against the index to see if any albums were deleted on source service
             index = util.index.Album.Album(self.service_src)
-            index.update()
+            index.sync()
             for album_src in index.fetch_all_deleted():
                 if album_src.get_match_name() in albums_targets_dict:
                     logging.getLogger().debug('-- ' + album_src.get_match_name() + ' -- index, will delete album')
