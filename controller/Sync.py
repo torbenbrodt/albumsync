@@ -2,6 +2,7 @@ import logging
 from controller.SyncAlbum import SyncAlbum
 import util.index.Album
 import util.Bootstrap
+import util.Superconfig
 
 
 class Sync:
@@ -15,8 +16,18 @@ class Sync:
         self.service_target = boot.get_service(service_target)
         self.album_str = album_src
 
+    def _get_albums(self, service):
+        if (service == self.service_src and util.Superconfig.Superconfig.from_index_src) or (
+                self.service_target == service and util.Superconfig.Superconfig.from_index_target):
+            index = util.index.Album.Album(service)
+            index.update()
+            return index.fetch_all_as_album()
+        else:
+            return service.Album.Album.fetch_all()
+
     def run(self):
-        albums_targets_dict = dict((album_target.get_match_name(), album_target) for album_target in self.service_target.Album.Album.fetch_all())
+        albums_targets_dict = dict((album_target.get_match_name(), album_target) for album_target in
+                                   self._get_albums(self.service_target))
 
         if self.album_str:
             boot = util.Bootstrap.Bootstrap()
@@ -33,7 +44,7 @@ class Sync:
                     del albums_targets_dict[album_src.get_match_name()]
                 else:
                     logging.getLogger().debug('-- ' + album_src.get_match_name() + ' -- index, will skip album')
-            album_src_list = self.service_src.Album.Album.fetch_all()
+            album_src_list = self._get_albums(self.service_src)
         self.sync_service(album_src_list, albums_targets_dict)
 
     def sync_service(self, album_src_list, albums_targets_dict):

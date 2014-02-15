@@ -3,6 +3,7 @@ import logging
 from controller.Sync import Sync
 from controller.List import List
 from controller.Purge import Purge
+from util.Superconfig import Superconfig
 
 
 class Front:
@@ -29,10 +30,13 @@ class Front:
 
         # index is optional, use it to allow file deletion
         parser.add_argument('--util_index_dir', help='Directory where the index is written', metavar='~/.albumsyncindex')
+        parser.add_argument('--util_index_ttl', help='TTL for index reads', metavar='0')
 
         # super config
         parser.add_argument('--log', help='possible values are DEBUG, INFO, WARN', default='warn', metavar='warn')
         parser.add_argument('--allowdelete', help='is delete allowed', type=bool, metavar=False)
+        parser.add_argument('--from_index_src', help='should soure albums be loaded from index', type=bool, metavar=False)
+        parser.add_argument('--from_index_target', help='should target albums be loaded from index', type=bool, metavar=False)
 
         # source and target
         parser.add_argument('--src', help='source service e.g. local', metavar='service')
@@ -58,6 +62,19 @@ class Front:
         if args.service_picasa_password:
             import service.picasa.Config
             service.picasa.Config.Config.password = args.service_picasa_password
+
+        if args.util_index_ttl:
+            import util.index.Config
+            util.index.Config.ttl = args.util_index_ttl
+        if args.util_index_dir:
+            import util.index.Config
+            util.index.Config.dir = args.util_index_dir
+        if args.allowdelete:
+            Superconfig.allowdelete = args.allowdelete
+        if args.from_index_src:
+            Superconfig.from_index_src = args.from_index_src
+        if args.from_index_target:
+            Superconfig.from_index_target = args.from_index_target
 
         # set log level
         numeric_level = getattr(logging, args.log.upper(), None)

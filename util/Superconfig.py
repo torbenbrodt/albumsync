@@ -3,3 +3,5 @@ class Superconfig:
         pass
 
     allowdelete = False
+    from_index_src = False
+    from_index_target = False
