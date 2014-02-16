@@ -186,7 +186,7 @@ class Media(AbstractMedia):
 
     def get_match_name(self):
         """this method is used to match media"""
-        return self.get_title()
+        return self.get_title().lower()
 
     def is_resize_necessary(self):
         if Config.noresize:

@@ -73,7 +73,7 @@ class Album(AbstractAlbum):
         this method is used to match albums
         @rtype : string
         """
-        return self.get_title()
+        return self.get_title().lower()
 
     def get_number_of_media(self):
         """

@@ -41,11 +41,15 @@ class Album:
         if not util.index.Config.Config.dir:
             return
 
-        if util.index.Config.Config.ttl and 'last_update' in self.index and \
-                util.index.Config.Config.ttl > time.time() - int(self.index['last_update']):
+        if util.index.Config.Config.ttl > 0 and 'last_update' in self.index and \
+                util.index.Config.Config.ttl > time.time() - float(self.index['last_update']):
             return
 
         self.synced = True
+
+        self.index['last_update'] = time.time()
+        fileref = open(self.path, 'w')
+        json.dump(self.index, fileref)
 
         # read media from service
         data_service = dict(
@@ -64,12 +68,11 @@ class Album:
         for match_name, album in data_service.items():
             if match_name not in self.index['entry']:
                 self.index['entry'][album.get_match_name()] = {
-                    'indexed': album.get_modification_time()
+                    'indexed': album.get_modification_time(),
+                    'url': album.get_url()
                 }
 
-    def write(self):
-        """write index"""
-        self.sync()
+        # write data
         self.index['last_update'] = time.time()
         fileref = open(self.path, 'w')
         json.dump(self.index, fileref)
@@ -89,7 +92,8 @@ class Album:
             return []
         albums = []
         for match_name in self.index['entry']:
-            albums.append(self.service.Album(match_name))
+            url = self.index['entry'][match_name]['url']
+            albums.append(self.service.Album.Album(url))
         return albums
 
     def fetch_all(self):

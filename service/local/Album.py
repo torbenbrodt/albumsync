@@ -42,7 +42,9 @@ class Album(AbstractAlbum):
         @param path: absolute path
         """
         assert Config.dir, "Config.dir cannot be empty"
-        self.path = path
+        if not isinstance(path, unicode):
+            path = path.decode('utf-8')
+        self.path = path.encode('utf-8').rstrip(os.pathsep)
         self.title = ''
 
     def get_url(self):
@@ -73,7 +75,7 @@ class Album(AbstractAlbum):
         this method is used to match albums
         @rtype : string
         """
-        return self.get_title()
+        return self.get_title().lower()
 
     def get_modification_time(self):
         return os.path.getmtime(self.path)

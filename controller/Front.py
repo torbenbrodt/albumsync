@@ -29,14 +29,14 @@ class Front:
         parser.add_argument('--album', help='Limit action to single album')
 
         # index is optional, use it to allow file deletion
-        parser.add_argument('--util_index_dir', help='Directory where the index is written', metavar='~/.albumsyncindex')
-        parser.add_argument('--util_index_ttl', help='TTL for index reads', metavar='0')
+        parser.add_argument('--util_index_dir', help='Directory where the index is written', metavar='~/.albumsyncindex', default='~/.albumsyncindex')
+        parser.add_argument('--util_index_ttl', help='TTL for index reads', metavar='86400', type=int, default=86400)
 
         # super config
         parser.add_argument('--log', help='possible values are DEBUG, INFO, WARN', default='warn', metavar='warn')
         parser.add_argument('--allowdelete', help='is delete allowed', type=bool, metavar=False)
-        parser.add_argument('--from_index_src', help='should soure albums be loaded from index', type=bool, metavar=False)
-        parser.add_argument('--from_index_target', help='should target albums be loaded from index', type=bool, metavar=False)
+        parser.add_argument('--from_index_src', help='should soure albums be loaded from index', action='store_true')
+        parser.add_argument('--from_index_target', help='should target albums be loaded from index', action='store_true')
 
         # source and target
         parser.add_argument('--src', help='source service e.g. local', metavar='service')
@@ -65,10 +65,10 @@ class Front:
 
         if args.util_index_ttl:
             import util.index.Config
-            util.index.Config.ttl = args.util_index_ttl
+            util.index.Config.Config.ttl = args.util_index_ttl
         if args.util_index_dir:
             import util.index.Config
-            util.index.Config.dir = args.util_index_dir
+            util.index.Config.Config.dir = args.util_index_dir
         if args.allowdelete:
             Superconfig.allowdelete = args.allowdelete
         if args.from_index_src:

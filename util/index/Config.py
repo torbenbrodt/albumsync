@@ -5,4 +5,4 @@ class Config:
 
     dir = ""
     # if ttl is empty index is always updated
-    ttl = 86400
+    ttl = 0
