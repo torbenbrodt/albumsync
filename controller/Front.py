@@ -1,5 +1,6 @@
 import argparse
 import logging
+import service.picasa.Client
 from controller.Sync import Sync
 from controller.List import List
 from controller.Purge import Purge
@@ -25,18 +26,23 @@ class Front:
         parser.add_argument('--service_picasa_username', help='Your picasa username', metavar='user@gmail.com')
         parser.add_argument('--service_picasa_password', help='Your picasa password', metavar='***')
         parser.add_argument('--service_picasa_noresize', help='Skip resizeing', action='store_true')
+        parser.add_argument('--service_picasa_max_video_size', help='Max Video Size for videos', type=int,
+                            metavar=service.picasa.Client.Client.MAX_VIDEO_SIZE,
+                            default=service.picasa.Client.Client.MAX_VIDEO_SIZE)
         parser.add_argument('--service_local_dir', help='Directory where local images are stored', metavar='~/Pictures')
         parser.add_argument('--album', help='Limit action to single album')
 
         # index is optional, use it to allow file deletion
-        parser.add_argument('--util_index_dir', help='Directory where the index is written', metavar='~/.albumsyncindex', default='~/.albumsyncindex')
+        parser.add_argument('--util_index_dir', help='Directory where the index is written',
+                            metavar='~/.albumsyncindex', default='~/.albumsyncindex')
         parser.add_argument('--util_index_ttl', help='TTL for index reads', metavar='86400', type=int, default=86400)
 
         # super config
         parser.add_argument('--log', help='possible values are DEBUG, INFO, WARN', default='warn', metavar='warn')
         parser.add_argument('--allowdelete', help='is delete allowed', type=bool, metavar=False)
         parser.add_argument('--from_index_src', help='should soure albums be loaded from index', action='store_true')
-        parser.add_argument('--from_index_target', help='should target albums be loaded from index', action='store_true')
+        parser.add_argument('--from_index_target', help='should target albums be loaded from index',
+                            action='store_true')
 
         # source and target
         parser.add_argument('--src', help='source service e.g. local', metavar='service')
@@ -56,13 +62,15 @@ class Front:
         if args.service_picasa_username:
             import service.picasa.Config
             service.picasa.Config.Config.username = args.service_picasa_username
-        if args.service_picasa_noresize:
-            import service.picasa.Config
-            service.picasa.Config.Config.noresize = args.service_picasa_noresize
         if args.service_picasa_password:
             import service.picasa.Config
             service.picasa.Config.Config.password = args.service_picasa_password
-
+        if args.service_picasa_noresize:
+            import service.picasa.Config
+            service.picasa.Config.Config.noresize = args.service_picasa_noresize
+        if args.service_picasa_max_video_size:
+            import service.picasa.Config
+            service.picasa.Config.Config.max_video_size = args.service_picasa_max_video_size
         if args.util_index_ttl:
             import util.index.Config
             util.index.Config.Config.ttl = args.util_index_ttl

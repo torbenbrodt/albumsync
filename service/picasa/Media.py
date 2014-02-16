@@ -96,13 +96,13 @@ class Media(AbstractMedia):
                                                                self.get_local_url(), self.get_mime_type())
         elif media_type.is_video(self.get_mime_type()):
             if is_new:
-                if self.get_filesize() > Client.MAX_VIDEO_SIZE:
+                if self.get_filesize() > Config.max_video_size:
                     raise Exception("Not uploading %s because it exceeds maximum file size" % self.get_local_url())
                 self.web_ref = Client.get_client().InsertPhoto(self.album.get_url(),
                                                                self._bild_entry(meta_data_data),
                                                                self.get_local_url(), self.get_mime_type())
             elif not self.get_url():
-                if self.get_filesize() > Client.MAX_VIDEO_SIZE:
+                if self.get_filesize() > Config.max_video_size:
                     raise Exception("Not uploading %s because it exceeds maximum file size" % self.get_local_url())
         else:
             raise Exception('unsupported file extension %s' % self.get_mime_type())

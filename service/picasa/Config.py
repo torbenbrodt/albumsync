@@ -5,3 +5,4 @@ class Config:
     username = ""
     password = ""
     noresize = False
+    max_video_size = 0
