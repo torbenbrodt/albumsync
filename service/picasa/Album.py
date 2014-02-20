@@ -41,6 +41,7 @@ class Album(AbstractAlbum):
             raise Exception('delete is not allowed')
         Client.get_client().Delete(self.web_ref)
 
+    # noinspection PyMissingConstructor
     def __init__(self, web_album):
         """
         @type web_album: gdata.photos.UserFeed or url

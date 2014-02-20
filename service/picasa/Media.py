@@ -62,17 +62,16 @@ class Media(AbstractMedia):
         self.local_url = ''
 
     def _get_meta_data(self):
-        dic = {}
-        dic['title'] = atom.Title(text=self.get_title())
-        dic['summary'] = atom.Summary(text=self.get_description(), summary_type='text')
+        meta_data = {'title': atom.Title(text=self.get_title()),
+                     'summary': atom.Summary(text=self.get_description(), summary_type='text')}
         if self.get_hash():
-            dic['checksum'] = gdata.photos.Checksum(text=self.get_hash())
+            meta_data['checksum'] = gdata.photos.Checksum(text=self.get_hash())
         else:
-            dic['checksum'] = gdata.photos.Checksum(text=Checksum.get_md5(self.get_local_url()))
-        dic['timestamp'] = gdata.photos.Timestamp(text=str(int(self.get_creation_time() * 1000)))
-        return dic
+            meta_data['checksum'] = gdata.photos.Checksum(text=Checksum.get_md5(self.get_local_url()))
+        meta_data['timestamp'] = gdata.photos.Timestamp(text=str(int(self.get_creation_time() * 1000)))
+        return meta_data
 
-    def _bild_entry(self, meta_data_data):
+    def _build_entry(self, meta_data_data):
         is_new = int(self.web_ref.gphoto_id.text) == 0
         if is_new:
             metadata = gdata.photos.PhotoEntry()
@@ -92,14 +91,14 @@ class Media(AbstractMedia):
         if media_type.is_image(self.get_mime_type()):
             if is_new:
                 self.web_ref = Client.get_client().InsertPhoto(self.album.get_url(),
-                                                               self._bild_entry(meta_data_data),
+                                                               self._build_entry(meta_data_data),
                                                                self.get_local_url(), self.get_mime_type())
         elif media_type.is_video(self.get_mime_type()):
             if is_new:
                 if self.get_filesize() > Config.max_video_size:
                     raise Exception("Not uploading %s because it exceeds maximum file size" % self.get_local_url())
                 self.web_ref = Client.get_client().InsertPhoto(self.album.get_url(),
-                                                               self._bild_entry(meta_data_data),
+                                                               self._build_entry(meta_data_data),
                                                                self.get_local_url(), self.get_mime_type())
             elif not self.get_url():
                 if self.get_filesize() > Config.max_video_size:
@@ -117,7 +116,7 @@ class Media(AbstractMedia):
 
         # InsertPhoto does not handle timestamp, so we need to update it again
         if self.web_ref.timestamp.text != meta_data_data['timestamp'].text:
-            self.web_ref = Client.get_client().UpdatePhotoMetadata(self._bild_entry(meta_data_data))
+            self.web_ref = Client.get_client().UpdatePhotoMetadata(self._build_entry(meta_data_data))
 
     def get_hash(self):
         if not self.web_ref.checksum.text:
