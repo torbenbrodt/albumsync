@@ -39,9 +39,12 @@ class Sync:
             for album_src in index.fetch_all_deleted():
                 if album_src.get_match_name() in albums_targets_dict:
                     logging.getLogger().debug('-- ' + album_src.get_match_name() + ' -- index, will delete album')
-                    albums_targets_dict[album_src.get_match_name()].delete()
-                    # remove from dictionary
-                    del albums_targets_dict[album_src.get_match_name()]
+                    try:
+                        albums_targets_dict[album_src.get_match_name()].delete()
+                        del albums_targets_dict[album_src.get_match_name()]
+                    except Exception as e:
+                        logging.getLogger().error('delete failed: ' + e.message)
+
                 else:
                     logging.getLogger().debug('-- ' + album_src.get_match_name() + ' -- index, will skip album')
             album_src_list = self._get_albums(self.service_src)
@@ -54,7 +57,11 @@ class Sync:
                 album_target = albums_targets_dict[album_src.get_match_name()]
             else:
                 logging.getLogger().debug('-- ' + album_src.get_match_name() + ' -- sync, will create new album')
-                album_target = self.service_target.Album.Album.create(album_src)
+                try:
+                    album_target = self.service_target.Album.Album.create(album_src)
+                except Exception as e:
+                    logging.getLogger().error('create failed: ' + e.message)
+                    continue
 
             album = SyncAlbum(self.service_src, self.service_target, album_src, album_target)
             album.run()
