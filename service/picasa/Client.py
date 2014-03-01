@@ -1,7 +1,12 @@
 import gdata
+import gdata.auth
 import gdata.photos
+import gdata.gauth
 import gdata.photos.service
 from service.picasa.Config import Config
+from oauth2client.client import flow_from_clientsecrets
+from oauth2client.file import Storage
+from oauth2client.tools import run
 
 
 class Client:
@@ -44,6 +49,22 @@ class Client:
         # since that's what gdata.photos.service uses.
         gdata.photos.service.SUPPORTED_UPLOAD_TYPES += \
             tuple(set([video_type.split('/')[1] for video_type in Client.SUPPORTED_VIDEO_TYPES.values()]))
+
+    @staticmethod
+    def get_client_oauth():
+        assert Config.client_secret_path, "picasa username cannot be empty"
+        Client._update_config()
+
+        flow = flow_from_clientsecrets(Config.client_secret_path, scope='https://picasaweb.google.com/data/')
+
+        storage = Storage('/tmp/oauth_credentials')
+        credentials = run(flow, storage)
+        auth2token = gdata.gauth.OAuth2TokenFromCredentials(credentials)
+        #auth2token = gdata.auth.OAuthToken()
+        #gd_client.SetOAuthToken(auth2token)
+        gd_client = gdata.photos.service.PhotosService()
+        gd_client = auth2token.authorize(gd_client)
+        return gd_client
 
     @staticmethod
     def get_client():
