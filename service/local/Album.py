@@ -31,11 +31,14 @@ class Album(AbstractAlbum):
         @rtype Album
         """
         assert Config.dir, "Config.dir cannot be empty"
-        path = Config.dir + '/' + album_src.get_title()
+        # strip leading slash or dots from beginning for security reason
+        title = album_src.get_title().lstrip(os.path.sep + ".")
+        path = Config.dir + '/' + title
         path.rstrip(os.path.sep)
         os.makedirs(path)
         return Album(path)
 
+    # noinspection PyMissingConstructor
     def __init__(self, path):
         """
         @type path: string

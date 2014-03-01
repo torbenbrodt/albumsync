@@ -223,7 +223,9 @@ class Media(AbstractMedia):
         new_url = ImageHelper.resize(self.get_local_url(),
                                      Client.MAX_FREE_IMAGE_DIMENSION,
                                      Client.MAX_FREE_IMAGE_DIMENSION)
-        if self.get_local_url() != new_url:
+        if self.get_local_url() == new_url:
+            return False
+        else:
             self.local_url = new_url
             width, height = ImageHelper.get_size(new_url)
             self.web_ref.width = Duck.create({'text': str(width)})
@@ -231,8 +233,6 @@ class Media(AbstractMedia):
             # leave this empty, as the indicator that the rawdata is new, see save() method
             self.web_ref.content = Duck.create({'src': ''})
             return True
-        else:
-            return False
 
     def validate(self):
         """make this object valid
