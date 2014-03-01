@@ -15,6 +15,7 @@ Please fork this project and create pull requests if you want to help.
 
 Usage
 -----
+```bash
 usage: albumsync.py [-h] [--service_picasa_username user@gmail.com]
                     [--service_picasa_password ***]
                     [--service_picasa_noresize]
@@ -25,7 +26,7 @@ usage: albumsync.py [-h] [--service_picasa_username user@gmail.com]
                     [--allowdelete False] [--allowsourceupdate False]
                     [--from_index_src] [--from_index_target] [--src service]
                     [--target service] [--purge] [--sync] [--list]
-
+```
 Setup
 -----
 Needs pyexiv2 to resize images without loosing exif data
@@ -49,7 +50,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
