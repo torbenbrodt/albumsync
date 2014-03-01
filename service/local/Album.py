@@ -32,7 +32,7 @@ class Album(AbstractAlbum):
         """
         assert Config.dir, "Config.dir cannot be empty"
         path = Config.dir + '/' + album_src.get_title()
-        path.rstrip(os.pathsep)
+        path.rstrip(os.path.sep)
         os.makedirs(path)
         return Album(path)
 
@@ -44,7 +44,7 @@ class Album(AbstractAlbum):
         assert Config.dir, "Config.dir cannot be empty"
         if not isinstance(path, unicode):
             path = path.decode('utf-8')
-        self.path = path.encode('utf-8').rstrip(os.pathsep)
+        self.path = path.encode('utf-8').rstrip(os.path.sep)
         self.title = ''
 
     def get_url(self):
