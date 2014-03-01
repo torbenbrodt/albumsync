@@ -40,6 +40,7 @@ class Front:
         # super config
         parser.add_argument('--log', help='possible values are DEBUG, INFO, WARN', default='warn', metavar='warn')
         parser.add_argument('--allowdelete', help='is delete allowed', type=bool, metavar=False)
+        parser.add_argument('--allowsourceupdate', help='allow update of sourve item (e.g. resizing)', type=bool, metavar=False)
         parser.add_argument('--from_index_src', help='should soure albums be loaded from index', action='store_true')
         parser.add_argument('--from_index_target', help='should target albums be loaded from index',
                             action='store_true')
@@ -79,6 +80,8 @@ class Front:
             util.index.Config.Config.dir = args.util_index_dir
         if args.allowdelete:
             Superconfig.allowdelete = args.allowdelete
+        if args.allowsourceupdate:
+            Superconfig.allowsourceupdate = args.allowsourceupdate
         if args.from_index_src:
             Superconfig.from_index_src = args.from_index_src
         if args.from_index_target:

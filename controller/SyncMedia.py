@@ -1,4 +1,5 @@
 import logging
+from util.Superconfig import Superconfig
 
 
 class SyncMedia:
@@ -91,7 +92,10 @@ class SyncMedia:
         return 0
 
     def run(self):
-        # before comparing ensure, that objects are valid
+        # optional validating and resizing of source media
+        if Superconfig.allowsourceupdate and self.media_src.validate():
+            self.media_src.save()
+        # before comparing ensure, that target object is valid
         changed = self.media_target.validate()
         score = self.get_score()
         if score > 0:
